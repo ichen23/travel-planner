@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
     
     model_config = SettingsConfigDict(
-        env_file=ENV_FILE,
+        env_file=ENV_FILE if os.path.exists(ENV_FILE) else None,
         env_file_encoding="utf-8",
         extra="ignore"
     )
