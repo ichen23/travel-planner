@@ -1,8 +1,17 @@
 import { Card, Tag, Typography, Row, Col, Tooltip, Button, Collapse } from 'antd'
 import { ClockCircleOutlined, DollarOutlined, StarOutlined, EnvironmentOutlined, RightOutlined, CheckCircleOutlined, WarningOutlined, CameraOutlined, ShopOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
+import { getCityType } from '../utils/constants'
 
 const { Text, Title } = Typography
+
+const CITY_TYPE_CONFIG = {
+  popular: { color: 'red', label: '热门', icon: '⭐' },
+  provincial: { color: 'blue', label: '省会', icon: '🏛️' },
+  prefecture: { color: 'default', label: '地市', icon: '🏙️' },
+  scenic: { color: 'orange', label: '景点', icon: '🏔️' },
+  ancient: { color: 'purple', label: '古镇', icon: '🏯' },
+}
 
 const getGradient = (cityName) => {
   const colors = [
@@ -246,6 +255,8 @@ export default function DestinationCard({ dest }) {
   const [c1, c2] = getGradient(dest.city)
 
   const tips = dest.tips
+  const cityType = getCityType(dest.city, dest.tags)
+  const typeConfig = CITY_TYPE_CONFIG[cityType] || CITY_TYPE_CONFIG.prefecture
 
   return (
     <Card
@@ -266,7 +277,7 @@ export default function DestinationCard({ dest }) {
       onClick={() => navigate(`/destinations/${dest.city}`)}
     >
       <div style={{
-        height: 90,
+        height: 100,
         background: `linear-gradient(135deg, ${c1}, ${c2})`,
         display: 'flex',
         alignItems: 'center',
@@ -274,12 +285,32 @@ export default function DestinationCard({ dest }) {
         position: 'relative',
       }}>
         <div style={{
-          fontSize: 32,
-          fontWeight: 700,
-          color: 'white',
-          textShadow: '2px 2px 8px rgba(0,0,0,0.2)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 4,
         }}>
-          {dest.city}
+          <div style={{
+            fontSize: 28,
+            fontWeight: 700,
+            color: 'white',
+            textShadow: '2px 2px 8px rgba(0,0,0,0.2)',
+          }}>
+            {dest.city}
+          </div>
+          <Tag 
+            color={typeConfig.color}
+            style={{ 
+              margin: 0, 
+              fontSize: 11, 
+              padding: '0 8px',
+              lineHeight: '18px',
+              borderRadius: 10,
+              background: 'rgba(255,255,255,0.95)',
+            }}
+          >
+            {typeConfig.icon} {typeConfig.label}
+          </Tag>
         </div>
         
         {dest.best_time && (
