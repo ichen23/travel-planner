@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -10,6 +11,16 @@ from app.routers.weather import router as weather_router
 from app.routers.planner import router as planner_router
 from app.routers.favorites import router as favorites_router
 from app.routers.ai import router as ai_router
+from app.config import get_settings
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger("travel-planner")
+
+settings = get_settings()
+logger.info(f"Starting Travel Planner API - AMAP_KEY configured: {bool(settings.AMAP_KEY)}")
 
 app = FastAPI(
     title="高铁旅行规划",
@@ -39,7 +50,22 @@ if FRONTEND_DIR.exists():
 
 @app.get("/api/health")
 async def health_check():
-    return {"status": "ok", "version": "1.0.0", "service": "travel-planner-api"}
+    return {
+        "status": "ok", 
+        "version": "1.0.0", 
+        "service": "travel-planner-api",
+        "amap_key_configured": bool(settings.AMAP_KEY),
+        "amap_key_length": len(settings.AMAP_KEY) if settings.AMAP_KEY else 0
+    }
+
+@app.get("/api/config-status")
+async def config_status():
+    return {
+        "amap_key_present": bool(settings.AMAP_KEY),
+        "amap_key_preview": settings.AMAP_KEY[:8] + "..." if settings.AMAP_KEY else "NOT SET",
+        "juhe_key_present": bool(settings.JUHE_API_KEY),
+        "environment": "production"
+    }
 
 @app.get("/{full_path:path}")
 async def serve_frontend(full_path: str):

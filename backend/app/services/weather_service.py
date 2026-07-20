@@ -1,53 +1,78 @@
 import httpx
-import random
+import logging
 from datetime import datetime, timedelta
 from app.config import get_settings
 
-settings = get_settings()
+logger = logging.getLogger(__name__)
 
 AMAP_WEATHER_URL = "https://restapi.amap.com/v3/weather/weatherInfo"
 AMAP_GEOCODE_URL = "https://restapi.amap.com/v3/geocode/geo"
 
 
 async def get_city_adcode(city_name: str) -> str:
+    settings = get_settings()
+    if not settings.AMAP_KEY:
+        logger.error("AMAP_KEY is not configured")
+        return ""
+    
     params = {
         "key": settings.AMAP_KEY,
         "address": city_name,
         "output": "JSON",
     }
-    async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.get(AMAP_GEOCODE_URL, params=params)
-        data = resp.json()
-        if data.get("status") == "1" and data.get("geocodes"):
-            return data["geocodes"][0].get("adcode", "")
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(AMAP_GEOCODE_URL, params=params)
+            data = resp.json()
+            if data.get("status") == "1" and data.get("geocodes"):
+                return data["geocodes"][0].get("adcode", "")
+            else:
+                logger.warning(f"Geocode failed for {city_name}: {data.get('info')}")
+    except Exception as e:
+        logger.error(f"Geocode request failed: {str(e)}")
     return ""
 
 
 async def get_weather(city_adcode: str):
+    settings = get_settings()
+    if not settings.AMAP_KEY:
+        logger.error("AMAP_KEY is not configured")
+        return None
+    
     params = {
         "key": settings.AMAP_KEY,
         "city": city_adcode,
         "extensions": "base",
         "output": "JSON",
     }
-    async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.get(AMAP_WEATHER_URL, params=params)
-        data = resp.json()
-        if data.get("status") == "1" and data.get("lives"):
-            live = data["lives"][0]
-            return {
-                "city": live.get("city"),
-                "weather": live.get("weather"),
-                "temperature": live.get("temperature"),
-                "wind_direction": live.get("winddirection"),
-                "wind_power": live.get("windpower"),
-                "humidity": live.get("humidity"),
-                "report_time": live.get("reporttime"),
-            }
-        return None
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(AMAP_WEATHER_URL, params=params)
+            data = resp.json()
+            if data.get("status") == "1" and data.get("lives"):
+                live = data["lives"][0]
+                return {
+                    "city": live.get("city"),
+                    "weather": live.get("weather"),
+                    "temperature": live.get("temperature"),
+                    "wind_direction": live.get("winddirection"),
+                    "wind_power": live.get("windpower"),
+                    "humidity": live.get("humidity"),
+                    "report_time": live.get("reporttime"),
+                }
+            else:
+                logger.warning(f"Weather request failed: {data.get('info')}")
+    except Exception as e:
+        logger.error(f"Weather request failed: {str(e)}")
+    return None
 
 
 async def get_weather_forecast(city_name: str):
+    settings = get_settings()
+    if not settings.AMAP_KEY:
+        logger.error("AMAP_KEY is not configured")
+        return None
+    
     adcode = await get_city_adcode(city_name)
     if not adcode:
         return None
@@ -61,9 +86,10 @@ async def get_weather_forecast(city_name: str):
         "output": "JSON",
     }
     
-    async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.get(AMAP_WEATHER_URL, params=params)
-        data = resp.json()
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(AMAP_WEATHER_URL, params=params)
+            data = resp.json()
         
         if data.get("status") == "1" and data.get("forecasts"):
             forecast = data["forecasts"][0]
@@ -98,6 +124,11 @@ async def get_weather_forecast(city_name: str):
                 "rain_alert": _check_rain_alert(result_days),
                 "temperature_trend": _analyze_temperature_trend(result_days),
             }
+        else:
+            logger.warning(f"Weather forecast failed: {data.get('info')}")
+            return None
+    except Exception as e:
+        logger.error(f"Weather forecast error: {str(e)}")
         return None
 
 

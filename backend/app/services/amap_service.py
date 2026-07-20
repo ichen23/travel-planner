@@ -1,7 +1,8 @@
 import httpx
+import logging
 from app.config import get_settings
 
-settings = get_settings()
+logger = logging.getLogger(__name__)
 
 AMAP_POI_URL = "https://restapi.amap.com/v3/place/text"
 AMAP_POI_DETAIL_URL = "https://restapi.amap.com/v3/place/detail"
@@ -12,12 +13,26 @@ AMAP_TIP_URL = "https://restapi.amap.com/v3/assistant/inputtips"
 
 
 async def _make_request(url: str, params: dict) -> dict:
-    params["key"] = settings.AMAP_KEY
+    settings = get_settings()
+    amap_key = settings.AMAP_KEY
+    if not amap_key:
+        logger.error("AMAP_KEY is not configured")
+        return {"status": "0", "info": "AMAP_KEY not configured"}
+    
+    params["key"] = amap_key
     params["output"] = "JSON"
     params.setdefault("extensions", "all")
-    async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.get(url, params=params)
-        return resp.json()
+    
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(url, params=params)
+            result = resp.json()
+            if result.get("status") != "1":
+                logger.warning(f"Amap API error: {result.get('info')}, url: {url}")
+            return result
+    except Exception as e:
+        logger.error(f"Amap API request failed: {str(e)}")
+        return {"status": "0", "info": str(e)}
 
 
 def _parse_poi(poi: dict) -> dict:
