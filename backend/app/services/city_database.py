@@ -30,6 +30,29 @@ try:
 except Exception as e:
     pass
 
+MASS_CITY_COORDS = {}
+MASS_CITY_TIPS = {}
+MASS_CITY_TAGS = {}
+MASS_CITY_INFO = {}
+
+try:
+    import importlib.util
+    _mass_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mass_city_data.py')
+    if os.path.exists(_mass_path):
+        _spec = importlib.util.spec_from_file_location("mass_city_data", _mass_path)
+        _module = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_module)
+        if hasattr(_module, 'MASS_CITY_COORDS'):
+            MASS_CITY_COORDS = _module.MASS_CITY_COORDS
+        if hasattr(_module, 'MASS_CITY_TIPS'):
+            MASS_CITY_TIPS = _module.MASS_CITY_TIPS
+        if hasattr(_module, 'MASS_CITY_TAGS'):
+            MASS_CITY_TAGS = _module.MASS_CITY_TAGS
+        if hasattr(_module, 'MASS_CITY_INFO'):
+            MASS_CITY_INFO = _module.MASS_CITY_INFO
+except Exception as e:
+    pass
+
 CITY_COORDS = {
     "北京": (116.4074, 39.9042), "上海": (121.4737, 31.2304),
     "广州": (113.2644, 23.1291), "深圳": (114.0579, 22.5431),
@@ -73,7 +96,7 @@ CITY_COORDS = {
     "齐齐哈尔": (123.9741, 47.3542), "牡丹江": (129.5968, 44.5527),
 }
 
-ALL_CITY_COORDS = {**CITY_COORDS, **EXTENDED_CITY_COORDS}
+ALL_CITY_COORDS = {**CITY_COORDS, **EXTENDED_CITY_COORDS, **MASS_CITY_COORDS}
 
 CITY_HIGH_SPEED_DATA = {
     "北京": [
@@ -663,10 +686,24 @@ def get_city_info(city):
             "price": ext.get("price", basic.get("price", "")),
             "avg_daily_budget": ext.get("avg_daily_budget", basic.get("avg_daily_budget", 400)),
         }}
+    elif city in MASS_CITY_INFO:
+        mass = MASS_CITY_INFO[city]
+        basic = {**basic, **{
+            "highlights": mass.get("highlights", basic.get("highlights", "")),
+            "description": mass.get("description", basic.get("description", "")),
+            "rating": mass.get("rating", basic.get("rating", 4.5)),
+            "best_time": mass.get("best_time", basic.get("best_time", "")),
+            "weather_tips": mass.get("weather_tips", basic.get("weather_tips", "")),
+            "transport": mass.get("transport", basic.get("transport", "")),
+            "price": mass.get("price", basic.get("price", "")),
+            "avg_daily_budget": mass.get("avg_daily_budget", basic.get("avg_daily_budget", 400)),
+        }}
     
     if city in EXTENDED_CITY_TIPS:
         ext_tips = EXTENDED_CITY_TIPS[city]
         basic["tips"] = ext_tips
+    elif city in MASS_CITY_TIPS:
+        basic["tips"] = MASS_CITY_TIPS[city]
     else:
         extended = get_beijing_3hr_info(city)
         if extended:
@@ -703,6 +740,8 @@ def get_city_info(city):
     basic["name"] = basic.get("name") or city
     if city in EXTENDED_CITY_COORDS:
         basic["coords"] = EXTENDED_CITY_COORDS[city]
+    elif city in MASS_CITY_COORDS:
+        basic["coords"] = MASS_CITY_COORDS[city]
     elif city in BEIJING_3HR_COORDS:
         basic["coords"] = BEIJING_3HR_COORDS[city]
     else:
@@ -710,6 +749,8 @@ def get_city_info(city):
     
     if city in EXTENDED_CITY_TAGS:
         basic["tags"] = EXTENDED_CITY_TAGS[city]
+    elif city in MASS_CITY_TAGS:
+        basic["tags"] = MASS_CITY_TAGS[city]
     elif city in ALL_CITY_TAGS:
         basic["tags"] = ALL_CITY_TAGS[city]
     elif city in BEIJING_3HR_COORDS:
