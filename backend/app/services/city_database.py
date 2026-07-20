@@ -1,19 +1,34 @@
 """城市数据库 - 全国主要城市 + 详细旅游贴士"""
 import random
+import os
 from app.services.beijing_3hr_data import (
     BEIJING_3HR_COORDS, BEIJING_3HR_DESTINATIONS, DEFAULT_EXTENDED_INFO,
     DESTINATION_TRAVEL_TIMES, get_travel_time_hours, time_category,
     get_beijing_3hr_destinations, get_beijing_3hr_info, format_travel_time
 )
 
+EXTENDED_CITY_COORDS = {}
+EXTENDED_CITY_TIPS = {}
+EXTENDED_CITY_TAGS = {}
+EXTENDED_CITY_BASIC_INFO = {}
+
 try:
-    from app.services.extended_city_data import (
-        EXTENDED_CITY_COORDS, EXTENDED_CITY_TIPS, EXTENDED_CITY_TAGS
-    )
-except ImportError:
-    EXTENDED_CITY_COORDS = {}
-    EXTENDED_CITY_TIPS = {}
-    EXTENDED_CITY_TAGS = {}
+    import importlib.util
+    _module_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'expanded_city_data.py')
+    if os.path.exists(_module_path):
+        _spec = importlib.util.spec_from_file_location("expanded_city_data", _module_path)
+        _module = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_module)
+        if hasattr(_module, 'EXTENDED_CITY_COORDS'):
+            EXTENDED_CITY_COORDS = _module.EXTENDED_CITY_COORDS
+        if hasattr(_module, 'EXTENDED_CITY_TIPS'):
+            EXTENDED_CITY_TIPS = _module.EXTENDED_CITY_TIPS
+        if hasattr(_module, 'EXTENDED_CITY_TAGS'):
+            EXTENDED_CITY_TAGS = _module.EXTENDED_CITY_TAGS
+        if hasattr(_module, 'EXTENDED_CITY_BASIC_INFO'):
+            EXTENDED_CITY_BASIC_INFO = _module.EXTENDED_CITY_BASIC_INFO
+except Exception as e:
+    pass
 
 CITY_COORDS = {
     "北京": (116.4074, 39.9042), "上海": (121.4737, 31.2304),
@@ -635,47 +650,69 @@ def get_destinations_count():
 
 def get_city_info(city):
     basic = CITY_BASIC_INFO.get(city, {})
-    extended = get_beijing_3hr_info(city)
-    if extended:
+    
+    if city in EXTENDED_CITY_BASIC_INFO:
+        ext = EXTENDED_CITY_BASIC_INFO[city]
         basic = {**basic, **{
-            "highlights": extended.get("highlights", basic.get("highlights", "")),
-            "description": extended.get("description", basic.get("description", "")),
-            "rating": extended.get("rating", basic.get("rating", 4.5)),
-            "best_time": extended.get("best_time", basic.get("best_time", "")),
+            "highlights": ext.get("highlights", basic.get("highlights", "")),
+            "description": ext.get("description", basic.get("description", "")),
+            "rating": ext.get("rating", basic.get("rating", 4.5)),
+            "best_time": ext.get("best_time", basic.get("best_time", "")),
+            "weather_tips": ext.get("weather_tips", basic.get("weather_tips", "")),
+            "transport": ext.get("transport", basic.get("transport", "")),
+            "price": ext.get("price", basic.get("price", "")),
+            "avg_daily_budget": ext.get("avg_daily_budget", basic.get("avg_daily_budget", 400)),
         }}
-        basic["tips"] = {
-            "food": extended.get("food", []),
-            "food_spots": extended.get("food_spots", []),
-            "hotels": extended.get("hotels", []),
-            "attractions": extended.get("attractions", []),
-            "attraction_tips": extended.get("attraction_tips", []),
-            "avoid_traps": extended.get("avoid_traps", []),
-            "transport_tips": extended.get("transport_tips", []),
-            "budget": extended.get("budget", {}),
-            "itinerary_suggestion": extended.get("itinerary_suggestion", []),
-            "best_photo_spots": extended.get("best_photo_spots", []),
-            "clothing_advice": extended.get("clothing_advice", ""),
-            "souvenirs": extended.get("souvenirs", []),
-            "emergency_contacts": extended.get("emergency_contacts", {}),
-            "accessibility": extended.get("accessibility", ""),
-            "family_friendly": extended.get("family_friendly", 4),
-            "couple_friendly": extended.get("couple_friendly", 4),
-            "solo_friendly": extended.get("solo_friendly", 4),
-            "nightlife": extended.get("nightlife", 2),
-        }
+    
+    if city in EXTENDED_CITY_TIPS:
+        ext_tips = EXTENDED_CITY_TIPS[city]
+        basic["tips"] = ext_tips
     else:
-        basic = {**DEFAULT_CITY_INFO, **basic}
-        basic["tips"] = ALL_CITY_TIPS.get(city, DEFAULT_CITY_TIPS)
+        extended = get_beijing_3hr_info(city)
+        if extended:
+            basic = {**basic, **{
+                "highlights": extended.get("highlights", basic.get("highlights", "")),
+                "description": extended.get("description", basic.get("description", "")),
+                "rating": extended.get("rating", basic.get("rating", 4.5)),
+                "best_time": extended.get("best_time", basic.get("best_time", "")),
+            }}
+            basic["tips"] = {
+                "food": extended.get("food", []),
+                "food_spots": extended.get("food_spots", []),
+                "hotels": extended.get("hotels", []),
+                "attractions": extended.get("attractions", []),
+                "attraction_tips": extended.get("attraction_tips", []),
+                "avoid_traps": extended.get("avoid_traps", []),
+                "transport_tips": extended.get("transport_tips", []),
+                "budget": extended.get("budget", {}),
+                "itinerary_suggestion": extended.get("itinerary_suggestion", []),
+                "best_photo_spots": extended.get("best_photo_spots", []),
+                "clothing_advice": extended.get("clothing_advice", ""),
+                "souvenirs": extended.get("souvenirs", []),
+                "emergency_contacts": extended.get("emergency_contacts", {}),
+                "accessibility": extended.get("accessibility", ""),
+                "family_friendly": extended.get("family_friendly", 4),
+                "couple_friendly": extended.get("couple_friendly", 4),
+                "solo_friendly": extended.get("solo_friendly", 4),
+                "nightlife": extended.get("nightlife", 2),
+            }
+        else:
+            basic = {**DEFAULT_CITY_INFO, **basic}
+            basic["tips"] = ALL_CITY_TIPS.get(city, DEFAULT_CITY_TIPS)
     
     basic["name"] = basic.get("name") or city
-    if city in BEIJING_3HR_COORDS:
+    if city in EXTENDED_CITY_COORDS:
+        basic["coords"] = EXTENDED_CITY_COORDS[city]
+    elif city in BEIJING_3HR_COORDS:
         basic["coords"] = BEIJING_3HR_COORDS[city]
     else:
         basic["coords"] = ALL_CITY_COORDS.get(city)
     
-    if city in ALL_CITY_TAGS:
+    if city in EXTENDED_CITY_TAGS:
+        basic["tags"] = EXTENDED_CITY_TAGS[city]
+    elif city in ALL_CITY_TAGS:
         basic["tags"] = ALL_CITY_TAGS[city]
-    elif extended:
+    elif city in BEIJING_3HR_COORDS:
         basic["tags"] = ["北京周边", "高铁直达"]
     else:
         basic["tags"] = []

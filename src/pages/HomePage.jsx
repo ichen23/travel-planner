@@ -30,19 +30,105 @@ const TIPS = [
   '🗺️ 到站后地铁可达市区',
 ]
 
+const QUOTES = [
+  { text: '世界灿烂盛大，欢迎回家。', author: '木苏里《全球高考》' },
+  { text: '愿你出走半生，归来仍是少年。', author: '苏轼' },
+  { text: '山长水远，终会相见。', author: '佚名' },
+  { text: '跨越山海，只为遇见你。', author: '佚名' },
+]
+
 export default function HomePage() {
   const navigate = useNavigate()
+  const randomQuote = QUOTES[Math.floor(Math.random() * QUOTES.length)]
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #f0f5ff 0%, #ffffff 100%)' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #fff5f5 0%, #f0f5ff 50%, #ffffff 100%)' }}>
       <div className="page-container">
-        <div style={{ textAlign: 'center', padding: '60px 24px 32px' }}>
-          <Title level={1} style={{ fontSize: 48, marginBottom: 16 }}>
-            🚄 高铁时代的<span style={{ color: '#ff6b6b' }}>旅行新方式</span>
-          </Title>
-          <Paragraph style={{ fontSize: 18, color: '#666', maxWidth: 600, margin: '0 auto' }}>
-            输入一个出发城市，帮你找到最合适的旅行目的地
-          </Paragraph>
+        <div style={{ textAlign: 'center', padding: '80px 24px 40px', position: 'relative' }}>
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 200,
+            height: 200,
+            background: 'radial-gradient(circle, rgba(255,107,107,0.1) 0%, transparent 70%)',
+            borderRadius: '50%',
+          }} />
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{
+              fontSize: 64,
+              marginBottom: 16,
+              animation: 'float 3s ease-in-out infinite',
+            }}>
+              🚄
+            </div>
+            
+            <Title level={1} style={{ 
+              fontSize: 48, 
+              marginBottom: 24,
+              background: 'linear-gradient(135deg, #ff6b6b, #ffd93d, #6bcb77)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              世界灿烂盛大，欢迎回家
+            </Title>
+
+            <div style={{
+              fontSize: 16,
+              color: '#666',
+              marginBottom: 32,
+              fontStyle: 'italic',
+            }}>
+              — {randomQuote.author}
+            </div>
+
+            <Paragraph style={{ 
+              fontSize: 18, 
+              color: '#555', 
+              maxWidth: 600, 
+              margin: '0 auto 32px',
+              lineHeight: 1.8,
+            }}>
+              跨越山海，只为遇见更好的风景
+              <br />
+              输入一个出发城市，开启你的旅程 ✨
+            </Paragraph>
+
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: 24,
+              flexWrap: 'wrap',
+            }}>
+              <div style={{
+                padding: '12px 24px',
+                background: 'linear-gradient(135deg, #ff6b6b20, #ff6b6b10)',
+                borderRadius: 20,
+                border: '1px solid #ff6b6b30',
+              }}>
+                <Text style={{ color: '#ff6b6b', fontSize: 14 }}>🌟 连接 {100}+ 城市</Text>
+              </div>
+              <div style={{
+                padding: '12px 24px',
+                background: 'linear-gradient(135deg, #4ecdc420, #4ecdc410)',
+                borderRadius: 20,
+                border: '1px solid #4ecdc430',
+              }}>
+                <Text style={{ color: '#4ecdc4', fontSize: 14 }}>🎯 精准推荐</Text>
+              </div>
+              <div style={{
+                padding: '12px 24px',
+                background: 'linear-gradient(135deg, #ffa50220, #ffa50210)',
+                borderRadius: 20,
+                border: '1px solid #ffa50230',
+              }}>
+                <Text style={{ color: '#ffa502', fontSize: 14 }}>💡 智能攻略</Text>
+              </div>
+            </div>
+          </div>
         </div>
 
         <SearchBar />
@@ -50,7 +136,13 @@ export default function HomePage() {
         <Row gutter={[24, 24]} style={{ marginTop: 48 }}>
           {FEATURES.map((f, i) => (
             <Col xs={24} sm={12} md={6} key={i}>
-              <Card className="card-hover" variant="borderless" style={{ textAlign: 'center', padding: '24px 16px' }}>
+              <Card className="card-hover" variant="borderless" style={{ 
+                textAlign: 'center', 
+                padding: 24,
+                borderRadius: 16,
+                background: 'linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%)',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+              }}>
                 {f.icon}
                 <Title level={4} style={{ marginTop: 16, marginBottom: 8 }}>{f.title}</Title>
                 <Paragraph type="secondary" style={{ margin: 0 }}>{f.desc}</Paragraph>
@@ -69,9 +161,14 @@ export default function HomePage() {
                   variant="borderless"
                   hoverable
                   onClick={() => navigate(`/trains?from=${route.from}&to=${route.to}&date=${new Date(Date.now() + 7*24*60*60*1000).toISOString().slice(0, 10)}`)}
-                  style={{ borderRadius: 12, textAlign: 'center', padding: 16 }}
+                  style={{ 
+                    borderRadius: 16, 
+                    textAlign: 'center', 
+                    padding: 16,
+                    transition: 'all 0.3s',
+                  }}
                 >
-                  <div style={{ fontSize: 24, fontWeight: 'bold', color: '#1677ff' }}>
+                  <div style={{ fontSize: 20, fontWeight: 'bold', color: '#1677ff' }}>
                     {route.from} → {route.to}
                   </div>
                   <div style={{ marginTop: 8, color: '#666' }}>
@@ -88,11 +185,17 @@ export default function HomePage() {
 
         <div style={{ marginTop: 48, marginBottom: 48 }}>
           <Title level={3}>💡 出行小贴士</Title>
-          <Card variant="borderless" style={{ borderRadius: 12 }}>
+          <Card variant="borderless" style={{ borderRadius: 16, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
             <Row gutter={[16, 16]}>
               {TIPS.map((tip, i) => (
                 <Col xs={24} sm={12} md={8} key={i}>
-                  <div style={{ padding: '8px 0', fontSize: 14 }}>
+                  <div style={{ 
+                    padding: '12px 16px', 
+                    fontSize: 14,
+                    background: 'linear-gradient(135deg, #f0fff4 0%, #e6fffb 100%)',
+                    borderRadius: 12,
+                    borderLeft: '4px solid #52c41a',
+                  }}>
                     <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
                     {tip}
                   </div>
@@ -101,6 +204,13 @@ export default function HomePage() {
             </Row>
           </Card>
         </div>
+
+        <style>{`
+          @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+          }
+        `}</style>
       </div>
     </div>
   )
