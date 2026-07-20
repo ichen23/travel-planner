@@ -1,6 +1,6 @@
 import httpx
 import logging
-from app.config import get_settings
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +13,7 @@ AMAP_TIP_URL = "https://restapi.amap.com/v3/assistant/inputtips"
 
 
 async def _make_request(url: str, params: dict) -> dict:
-    settings = get_settings()
-    amap_key = settings.AMAP_KEY
+    amap_key = os.environ.get('AMAP_KEY', '')
     if not amap_key:
         logger.error("AMAP_KEY is not configured")
         return {"status": "0", "info": "AMAP_KEY not configured"}

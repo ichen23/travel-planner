@@ -1,4 +1,5 @@
 import logging
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -11,7 +12,6 @@ from app.routers.weather import router as weather_router
 from app.routers.planner import router as planner_router
 from app.routers.favorites import router as favorites_router
 from app.routers.ai import router as ai_router
-from app.config import get_settings
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,8 +19,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger("travel-planner")
 
-settings = get_settings()
-logger.info(f"Starting Travel Planner API - AMAP_KEY configured: {bool(settings.AMAP_KEY)}")
+logger.info(f"Starting Travel Planner API")
+logger.info(f"AMAP_KEY in env: {bool(os.environ.get('AMAP_KEY'))}")
+logger.info(f"JUHE_API_KEY in env: {bool(os.environ.get('JUHE_API_KEY'))}")
 
 app = FastAPI(
     title="高铁旅行规划",
@@ -54,16 +55,20 @@ async def health_check():
         "status": "ok", 
         "version": "1.0.0", 
         "service": "travel-planner-api",
-        "amap_key_configured": bool(settings.AMAP_KEY),
-        "amap_key_length": len(settings.AMAP_KEY) if settings.AMAP_KEY else 0
+        "amap_key_in_env": bool(os.environ.get('AMAP_KEY')),
+        "amap_key_length": len(os.environ.get('AMAP_KEY', ''))
     }
 
 @app.get("/api/config-status")
 async def config_status():
+    amap_key = os.environ.get('AMAP_KEY', '')
+    juhe_key = os.environ.get('JUHE_API_KEY', '')
     return {
-        "amap_key_present": bool(settings.AMAP_KEY),
-        "amap_key_preview": settings.AMAP_KEY[:8] + "..." if settings.AMAP_KEY else "NOT SET",
-        "juhe_key_present": bool(settings.JUHE_API_KEY),
+        "amap_key_present": bool(amap_key),
+        "amap_key_preview": amap_key[:8] + "..." if amap_key else "NOT SET",
+        "amap_key_length": len(amap_key),
+        "juhe_key_present": bool(juhe_key),
+        "all_env_keys": [k for k in os.environ.keys() if 'KEY' in k.upper() or 'AMAP' in k.upper() or 'JUHE' in k.upper()],
         "environment": "production"
     }
 

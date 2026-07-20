@@ -1,7 +1,7 @@
 import httpx
 import logging
+import os
 from datetime import datetime, timedelta
-from app.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -10,13 +10,13 @@ AMAP_GEOCODE_URL = "https://restapi.amap.com/v3/geocode/geo"
 
 
 async def get_city_adcode(city_name: str) -> str:
-    settings = get_settings()
-    if not settings.AMAP_KEY:
+    amap_key = os.environ.get('AMAP_KEY', '')
+    if not amap_key:
         logger.error("AMAP_KEY is not configured")
         return ""
     
     params = {
-        "key": settings.AMAP_KEY,
+        "key": amap_key,
         "address": city_name,
         "output": "JSON",
     }
@@ -34,13 +34,13 @@ async def get_city_adcode(city_name: str) -> str:
 
 
 async def get_weather(city_adcode: str):
-    settings = get_settings()
-    if not settings.AMAP_KEY:
+    amap_key = os.environ.get('AMAP_KEY', '')
+    if not amap_key:
         logger.error("AMAP_KEY is not configured")
         return None
     
     params = {
-        "key": settings.AMAP_KEY,
+        "key": amap_key,
         "city": city_adcode,
         "extensions": "base",
         "output": "JSON",
@@ -68,8 +68,8 @@ async def get_weather(city_adcode: str):
 
 
 async def get_weather_forecast(city_name: str):
-    settings = get_settings()
-    if not settings.AMAP_KEY:
+    amap_key = os.environ.get('AMAP_KEY', '')
+    if not amap_key:
         logger.error("AMAP_KEY is not configured")
         return None
     
@@ -80,7 +80,7 @@ async def get_weather_forecast(city_name: str):
     current = await get_weather(adcode)
     
     params = {
-        "key": settings.AMAP_KEY,
+        "key": amap_key,
         "city": adcode,
         "extensions": "all",
         "output": "JSON",
