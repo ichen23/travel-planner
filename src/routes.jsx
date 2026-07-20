@@ -12,7 +12,7 @@ import PackingListPage from './pages/PackingListPage'
 import BudgetPage from './pages/BudgetPage'
 import BlindBoxPage from './pages/BlindBoxPage'
 
-export const router = createBrowserRouter([
+export const router = createHashRouter([
   {
     path: '/',
     element: <MainLayout />,
