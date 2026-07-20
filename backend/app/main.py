@@ -44,7 +44,7 @@ app.include_router(planner_router, prefix="/api")
 app.include_router(favorites_router, prefix="/api")
 app.include_router(ai_router, prefix="/api")
 
-FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "dist"
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "dist"
 
 if FRONTEND_DIR.exists():
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="assets")
