@@ -311,3 +311,343 @@ async def get_city_adcode(city_name: str):
     if district:
         return district.get("adcode")
     return None
+
+
+AMAP_DIRECTION_DRIVING_URL = "https://restapi.amap.com/v3/direction/driving"
+AMAP_DIRECTION_TRANSIT_URL = "https://restapi.amap.com/v3/direction/transit/integrated"
+AMAP_DIRECTION_WALKING_URL = "https://restapi.amap.com/v3/direction/walking"
+AMAP_DIRECTION_RIDING_URL = "https://restapi.amap.com/v4/direction/bicycling"
+AMAP_GEOCODE_REVERSE_URL = "https://restapi.amap.com/v3/geocode/regeo"
+AMAP_IP_URL = "https://restapi.amap.com/v3/ip"
+AMAP_WEATHER_URL = "https://restapi.amap.com/v3/weather/weatherInfo"
+
+
+async def driving_direction(origin: str, destination: str, strategy: int = 32) -> dict:
+    """
+    驾车路线规划
+    origin: 起点经纬度 "lng,lat"
+    destination: 终点经纬度 "lng,lat"
+    strategy: 路线策略 (32=高德推荐, 33=躲避拥堵, 34=高速优先, 35=不走高速)
+    """
+    cache_key = f"driving:{origin}:{destination}:{strategy}"
+    cached = _get_cache(cache_key)
+    if cached is not None:
+        return cached
+    
+    params = {
+        "origin": origin,
+        "destination": destination,
+        "strategy": strategy,
+        "extensions": "base"
+    }
+    data = await _make_request(AMAP_DIRECTION_DRIVING_URL, params)
+    if data.get("status") == "1":
+        route = data.get("route", {})
+        paths = route.get("paths", [])
+        result = {
+            "status": True,
+            "paths": [{
+                "distance": float(p.get("distance", 0)),
+                "duration": float(p.get("duration", 0)),
+                "tolls": float(p.get("tolls", 0)),
+                "toll_distance": float(p.get("toll_distance", 0)),
+                "steps_count": len(p.get("steps", [])),
+                "polyline": p.get("polyline", "")
+            } for p in paths],
+            "total_distance": route.get("distance", 0),
+            "taxi_cost": route.get("taxi_cost", 0)
+        }
+        _set_cache(cache_key, result)
+        return result
+    _set_cache(cache_key, {"status": False, "message": data.get("info")})
+    return {"status": False, "message": data.get("info")}
+
+
+async def transit_direction(origin: str, destination: str, city: str, 
+                             strategy: int = 0) -> dict:
+    """
+    公交路线规划
+    origin: 起点经纬度 "lng,lat"
+    destination: 终点经纬度 "lng,lat"
+    city: 城市名称或adcode
+    strategy: 0=推荐, 1=最少换乘, 2=最少步行, 3=最快捷
+    """
+    cache_key = f"transit:{origin}:{destination}:{city}:{strategy}"
+    cached = _get_cache(cache_key)
+    if cached is not None:
+        return cached
+    
+    params = {
+        "origin": origin,
+        "destination": destination,
+        "city": city,
+        "strategy": strategy
+    }
+    data = await _make_request(AMAP_DIRECTION_TRANSIT_URL, params)
+    if data.get("status") == "1":
+        route = data.get("route", {})
+        result = {
+            "status": True,
+            "transits": []
+        }
+        for transit in route.get("transits", []):
+            segments = transit.get("segments", [])
+            lines = []
+            for seg in segments:
+                bus_info = seg.get("bus", {})
+                buslines = bus_info.get("buslines", [])
+                for line in buslines:
+                    lines.append({
+                        "name": line.get("name"),
+                        "type": line.get("type"),
+                        "station_count": line.get("station_num"),
+                        "departure_stop": line.get("departure_stop", {}).get("name"),
+                        "arrival_stop": line.get("arrival_stop", {}).get("name")
+                    })
+            result["transits"].append({
+                "duration": transit.get("duration"),
+                "distance": transit.get("distance"),
+                "fare": transit.get("fare"),
+                "lines": lines
+            })
+        _set_cache(cache_key, result)
+        return result
+    _set_cache(cache_key, {"status": False, "message": data.get("info")})
+    return {"status": False, "message": data.get("info")}
+
+
+async def walking_direction(origin: str, destination: str) -> dict:
+    """
+    步行路线规划
+    origin: 起点经纬度 "lng,lat"
+    destination: 终点经纬度 "lng,lat"
+    """
+    cache_key = f"walking:{origin}:{destination}"
+    cached = _get_cache(cache_key)
+    if cached is not None:
+        return cached
+    
+    params = {
+        "origin": origin,
+        "destination": destination
+    }
+    data = await _make_request(AMAP_DIRECTION_WALKING_URL, params)
+    if data.get("status") == "1":
+        paths = data.get("route", {}).get("paths", [])
+        result = {
+            "status": True,
+            "paths": [{
+                "distance": float(p.get("distance", 0)),
+                "duration": float(p.get("duration", 0)),
+                "steps_count": len(p.get("steps", []))
+            } for p in paths]
+        }
+        _set_cache(cache_key, result)
+        return result
+    _set_cache(cache_key, {"status": False, "message": data.get("info")})
+    return {"status": False, "message": data.get("info")}
+
+
+async def riding_direction(origin: str, destination: str) -> dict:
+    """
+    骑行路线规划
+    origin: 起点经纬度 "lng,lat"
+    destination: 终点经纬度 "lng,lat"
+    """
+    cache_key = f"riding:{origin}:{destination}"
+    cached = _get_cache(cache_key)
+    if cached is not None:
+        return cached
+    
+    params = {
+        "origin": origin,
+        "destination": destination
+    }
+    data = await _make_request(AMAP_DIRECTION_RIDING_URL, params)
+    if data.get("status") == "1":
+        paths = data.get("data", {}).get("paths", [])
+        result = {
+            "status": True,
+            "paths": [{
+                "distance": float(p.get("distance", 0)),
+                "duration": float(p.get("duration", 0))
+            } for p in paths]
+        }
+        _set_cache(cache_key, result)
+        return result
+    _set_cache(cache_key, {"status": False, "message": data.get("info")})
+    return {"status": False, "message": data.get("info")}
+
+
+async def reverse_geocode(lng: float, lat: float) -> dict:
+    """
+    逆地理编码 - 经纬度转地址
+    """
+    cache_key = f"regeo:{lng}:{lat}"
+    cached = _get_cache(cache_key)
+    if cached is not None:
+        return cached
+    
+    params = {"location": f"{lng},{lat}"}
+    data = await _make_request(AMAP_GEOCODE_REVERSE_URL, params)
+    if data.get("status") == "1":
+        regeocode = data.get("regeocode", {})
+        address_component = regeocode.get("addressComponent", {})
+        result = {
+            "status": True,
+            "formatted_address": regeocode.get("formatted_address", ""),
+            "province": address_component.get("province", ""),
+            "city": address_component.get("city", ""),
+            "district": address_component.get("district", ""),
+            "township": address_component.get("township", ""),
+            "street": address_component.get("street", ""),
+            "number": address_component.get("number", ""),
+            "adcode": address_component.get("adcode", ""),
+            "building": address_component.get("building", {}).get("name", "")
+        }
+        _set_cache(cache_key, result)
+        return result
+    _set_cache(cache_key, {"status": False, "message": data.get("info")})
+    return {"status": False, "message": data.get("info")}
+
+
+async def ip_location(ip: str = "") -> dict:
+    """
+    IP定位 - 根据IP地址获取位置信息
+    注意: 免费版Key可能不支持无参数调用
+    """
+    cache_key = f"ip:{ip}"
+    cached = _get_cache(cache_key)
+    if cached is not None:
+        return cached
+    
+    params = {}
+    if ip:
+        params["ip"] = ip
+    
+    try:
+        data = await _make_request(AMAP_IP_URL, params)
+        if data.get("status") == "1":
+            result = {
+                "status": True,
+                "ip": data.get("ip", ""),
+                "country": data.get("country", ""),
+                "province": data.get("province", ""),
+                "city": data.get("city", ""),
+                "district": data.get("district", ""),
+                "rectangle": data.get("rectangle", "")
+            }
+            _set_cache(cache_key, result)
+            return result
+    except Exception as e:
+        pass
+    
+    _set_cache(cache_key, {"status": False, "message": "IP定位功能可能需要高级权限"})
+    return {"status": False, "message": "IP定位功能可能需要高级权限"}
+
+
+async def get_weather(adcode: str) -> dict:
+    """
+    获取天气信息
+    extensions: base=实况天气, all=预报天气
+    """
+    cache_key = f"weather:{adcode}"
+    cached = _get_cache(cache_key)
+    if cached is not None:
+        return cached
+    
+    current_data = await _make_request(AMAP_WEATHER_URL, {
+        "city": adcode,
+        "extensions": "base"
+    })
+    
+    forecast_data = await _make_request(AMAP_WEATHER_URL, {
+        "city": adcode,
+        "extensions": "all"
+    })
+    
+    result = {"status": False}
+    
+    if current_data.get("status") == "1":
+        lives = current_data.get("lives", [])
+        result["current"] = {
+            "province": lives[0].get("province") if lives else "",
+            "city": lives[0].get("city") if lives else "",
+            "weather": lives[0].get("weather") if lives else "",
+            "temperature": lives[0].get("temperature") if lives else "",
+            "wind_direction": lives[0].get("winddirection") if lives else "",
+            "wind_power": lives[0].get("windpower") if lives else "",
+            "humidity": lives[0].get("humidity") if lives else "",
+            "report_time": lives[0].get("reporttime") if lives else ""
+        }
+        result["status"] = True
+    
+    if forecast_data.get("status") == "1":
+        forecasts = forecast_data.get("forecasts", [])
+        if forecasts:
+            result["forecast"] = [{
+                "date": d.get("date"),
+                "week": d.get("week"),
+                "weather_day": d.get("weather_day"),
+                "weather_night": d.get("weather_night"),
+                "temp_max": d.get("temp_max"),
+                "temp_min": d.get("temp_min"),
+                "wind_direction_day": d.get("wind_direction_day"),
+                "wind_power_day": d.get("wind_power_day")
+            } for d in forecasts[0].get("casts", [])]
+    
+    _set_cache(cache_key, result)
+    return result
+
+
+def get_static_map_url(center_lng: float, center_lat: float, 
+                       zoom: int = 11, width: int = 750, height: int = 400,
+                       markers: str = "", paths: str = "") -> str:
+    """
+    生成静态地图URL
+    """
+    amap_key = os.environ.get('AMAP_KEY', '')
+    if not amap_key:
+        return ""
+    
+    base_url = "https://restapi.amap.com/v3/staticmap"
+    params = {
+        "location": f"{center_lng},{center_lat}",
+        "zoom": zoom,
+        "size": f"{width}*{height}",
+        "key": amap_key
+    }
+    if markers:
+        params["markers"] = markers
+    if paths:
+        params["paths"] = paths
+    
+    query = "&".join(f"{k}={v}" for k, v in params.items())
+    return f"{base_url}?{query}"
+
+
+async def get_all_transport_modes(origin: str, destination: str, city: str = "") -> dict:
+    """
+    获取所有交通方式的路线规划
+    """
+    results = {}
+    
+    driving, walking = await asyncio.gather(
+        driving_direction(origin, destination),
+        walking_direction(origin, destination),
+        return_exceptions=True
+    )
+    
+    if isinstance(driving, Exception):
+        driving = {"status": False, "message": str(driving)}
+    if isinstance(walking, Exception):
+        walking = {"status": False, "message": str(walking)}
+    
+    results["driving"] = driving
+    results["walking"] = walking
+    
+    if city:
+        transit = await transit_direction(origin, destination, city)
+        results["transit"] = transit
+    
+    return results

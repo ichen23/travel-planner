@@ -17,6 +17,7 @@ from app.routers.planner import router as planner_router
 from app.routers.favorites import router as favorites_router
 from app.routers.ai import router as ai_router
 from app.routers.multi_city import router as multi_city_router
+from app.routers.map import router as map_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -49,6 +50,7 @@ app.include_router(planner_router, prefix="/api")
 app.include_router(favorites_router, prefix="/api")
 app.include_router(ai_router, prefix="/api")
 app.include_router(multi_city_router, prefix="/api")
+app.include_router(map_router, prefix="/api")
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "dist"
 
