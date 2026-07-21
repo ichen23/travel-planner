@@ -353,9 +353,9 @@ async def driving_direction(origin: str, destination: str, strategy: int = 32) -
                 "toll_distance": float(p.get("toll_distance", 0)),
                 "steps_count": len(p.get("steps", [])),
                 "polyline": p.get("polyline", "")
-            } for p in paths],
-            "total_distance": route.get("distance", 0),
-            "taxi_cost": route.get("taxi_cost", 0)
+            } for p in paths] if paths else [],
+            "total_distance": float(route.get("distance", 0)) if route.get("distance") else 0,
+            "taxi_cost": float(route.get("taxi_cost", 0)) if route.get("taxi_cost") else 0
         }
         _set_cache(cache_key, result)
         return result
@@ -390,19 +390,20 @@ async def transit_direction(origin: str, destination: str, city: str,
             "status": True,
             "transits": []
         }
-        for transit in route.get("transits", []):
-            segments = transit.get("segments", [])
+        transits = route.get("transits", []) or []
+        for transit in transits:
+            segments = transit.get("segments", []) or []
             lines = []
             for seg in segments:
-                bus_info = seg.get("bus", {})
-                buslines = bus_info.get("buslines", [])
+                bus_info = seg.get("bus", {}) or {}
+                buslines = bus_info.get("buslines", []) or []
                 for line in buslines:
                     lines.append({
                         "name": line.get("name"),
                         "type": line.get("type"),
                         "station_count": line.get("station_num"),
-                        "departure_stop": line.get("departure_stop", {}).get("name"),
-                        "arrival_stop": line.get("arrival_stop", {}).get("name")
+                        "departure_stop": (line.get("departure_stop") or {}).get("name"),
+                        "arrival_stop": (line.get("arrival_stop") or {}).get("name")
                     })
             result["transits"].append({
                 "duration": transit.get("duration"),

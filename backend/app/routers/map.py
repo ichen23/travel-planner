@@ -127,7 +127,7 @@ async def compare_routes(
     to_city: str = Query(..., description="目的城市"),
     transport_types: str = Query("driving,transit,walking", description="交通方式(driving,transit,walking,riding)")
 ):
-    from app.services.train_service import get_train_info
+    from app.services.multi_city_service import get_train_info
     from_city_geo = await geocode_city(from_city)
     to_city_geo = await geocode_city(to_city)
     

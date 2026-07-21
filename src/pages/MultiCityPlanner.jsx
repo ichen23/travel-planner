@@ -15,6 +15,7 @@ import {
 import {
   getMultiCityCities, generateMultiCityItinerary, getTrainInfo, getCityAttractions
 } from '../services/multiCityService'
+import { getRealPoi } from '../services/mapService'
 
 const { Text, Title } = Typography
 
@@ -72,12 +73,33 @@ export default function MultiCityPlanner() {
     setTempSelectedAttractions(userSelectedAttractions[cityName] || [])
     
     try {
-      const response = await getCityAttractions(cityName)
-      if (response.success) {
-        setModalAttractions(response.attractions || [])
-      } else {
-        setModalAttractions([])
+      let attractions = []
+      
+      // 优先获取高德真实POI数据
+      try {
+        const realResponse = await getRealPoi(cityName)
+        if (realResponse.success && realResponse.attractions && realResponse.attractions.length > 0) {
+          attractions = realResponse.attractions.map(a => ({
+            name: a.name,
+            address: a.address,
+            rating: a.rating,
+            tags: a.type ? a.type.split(';').slice(0, 2) : []
+          }))
+          message.success(`已加载 ${attractions.length} 个真实景点数据`)
+        }
+      } catch (e) {
+        console.log('真实POI获取失败，使用备用数据')
       }
+      
+      // 如果没有真实数据，使用备用数据
+      if (attractions.length === 0) {
+        const response = await getCityAttractions(cityName)
+        if (response.success) {
+          attractions = response.attractions || []
+        }
+      }
+      
+      setModalAttractions(attractions)
     } catch (error) {
       message.error('加载景点列表失败')
       setModalAttractions([])

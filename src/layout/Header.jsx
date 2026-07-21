@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Layout, Menu, Modal, Input } from 'antd'
-import { HomeOutlined, CarOutlined, EnvironmentOutlined, ScheduleOutlined, HeartOutlined, BarChartOutlined, ToolOutlined, WalletOutlined, GiftOutlined, ShoppingOutlined, SearchOutlined, CloseOutlined, SwapOutlined } from '@ant-design/icons'
+import { HomeOutlined, CarOutlined, EnvironmentOutlined, ScheduleOutlined, HeartOutlined, BarChartOutlined, ToolOutlined, WalletOutlined, GiftOutlined, ShoppingOutlined, SearchOutlined, CloseOutlined, SwapOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
 import CitySearch from '../components/CitySearch'
 
@@ -16,6 +16,7 @@ export default function AppHeader() {
     { key: '/trains', icon: <CarOutlined />, label: '查车票' },
     { key: '/destinations', icon: <EnvironmentOutlined />, label: '推荐目的地' },
     { key: '/multi-city', icon: <SwapOutlined />, label: '多城市游' },
+    { key: '/map-tools', icon: <ThunderboltOutlined />, label: '地图工具' },
     { key: '/blindbox', icon: <GiftOutlined />, label: '旅行盲盒' },
     { key: '/planner', icon: <ScheduleOutlined />, label: '行程规划' },
     { key: '/packing', icon: <ShoppingOutlined />, label: '行李清单' },

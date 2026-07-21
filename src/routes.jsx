@@ -12,6 +12,7 @@ import PackingListPage from './pages/PackingListPage'
 import BudgetPage from './pages/BudgetPage'
 import BlindBoxPage from './pages/BlindBoxPage'
 import MultiCityPlanner from './pages/MultiCityPlanner'
+import MapToolsPage from './pages/MapToolsPage'
 
 export const router = createHashRouter([
   {
@@ -25,6 +26,7 @@ export const router = createHashRouter([
       { path: 'destination/:city', element: <DestinationDetailPage /> },
       { path: 'planner', element: <PlannerPage /> },
       { path: 'multi-city', element: <MultiCityPlanner /> },
+      { path: 'map-tools', element: <MapToolsPage /> },
       { path: 'favorites', element: <FavoritesPage /> },
       { path: 'compare', element: <ComparePage /> },
       { path: 'toolbox', element: <ToolboxPage /> },
