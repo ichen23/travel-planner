@@ -1,5 +1,5 @@
 import { Modal, Image, Tag, Rate, Typography, Descriptions, List, Button, Divider, Space, Tooltip, Empty, Spin, message, Row, Col, Select, Form } from 'antd'
-import { EnvironmentOutlined, ClockCircleOutlined, DollarOutlined, PhoneOutlined, StarFilled, CalendarOutlined, CarOutlined, CameraOutlined, FileTextOutlined, ThunderboltOutlined, ExclamationCircleOutlined, RobotOutlined, ArrowLeftOutlined, PlusOutlined, CheckCircleOutlined } from '@ant-design/icons'
+import { EnvironmentOutlined, ClockCircleOutlined, DollarOutlined, PhoneOutlined, StarFilled, CalendarOutlined, CarOutlined, CameraOutlined, FileTextOutlined, ThunderboltOutlined, ExclamationCircleOutlined, RobotOutlined, ArrowLeftOutlined, PlusOutlined, CheckCircleOutlined, FormatPainterOutlined } from '@ant-design/icons'
 import { useState, useEffect } from 'react'
 import { getPoiDetail, generateAIContent, searchNearby } from '../services/destinationService'
 import { getAICacheItem, setAICache } from '../services/storageService'
@@ -14,6 +14,8 @@ const PoiDetailModal = ({ visible, poi, onClose, nestedMode = false, onOpenNeste
   const [aiModalOpen, setAiModalOpen] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiResult, setAiResult] = useState(null)
+  const [styleModalOpen, setStyleModalOpen] = useState(false)
+  const [pendingTemplateType, setPendingTemplateType] = useState(null)
   const [nearbyData, setNearbyData] = useState({ attractions: [], foods: [], hotels: [] })
   const [nearbyLoading, setNearbyLoading] = useState(false)
   const [nestedPoi, setNestedPoi] = useState(null)
@@ -23,6 +25,38 @@ const PoiDetailModal = ({ visible, poi, onClose, nestedMode = false, onOpenNeste
   const [form] = Form.useForm()
   const addToFavoritesStore = useFavoritesStore((state) => state.addToFavorites)
   const { schedule, addScheduleItem, setDays } = usePlannerStore()
+
+  const STYLE_OPTIONS = {
+    travel_copy: [
+      { key: 'travel_copy', name: '📝 普通游玩', desc: '简洁的游玩记录' },
+      { key: 'poetic', name: '🌸 诗意散文', desc: '文艺诗意的随笔' },
+      { key: 'humorous', name: '😂 幽默吐槽', desc: '搞笑幽默的体验' },
+      { key: 'literary', name: '📚 文艺风格', desc: '文艺青年的散文' },
+      { key: 'ancient', name: '🏮 古风游记', desc: '仿古风格记录' },
+      { key: 'epic', name: '⚔️ 史诗叙事', desc: '宏大叙事故事' },
+    ],
+    punch_card: [
+      { key: 'punch_card', name: '✅ 实用攻略', desc: '简洁实用指南' },
+      { key: 'poetic', name: '🎨 文艺打卡', desc: '文艺风格描述' },
+      { key: 'humorous', name: '😄 搞笑打卡', desc: '轻松幽默风格' },
+      { key: 'literary', name: '📖 深度游记', desc: '详细深度记录' },
+    ],
+    photo_spots: [
+      { key: 'photo_spots', name: '📷 标准推荐', desc: '经典拍照位置' },
+      { key: 'poetic', name: '🌅 光影意境', desc: '光影氛围建议' },
+      { key: 'literary', name: '🎭 人像构图', desc: '人像拍照技巧' },
+      { key: 'humorous', name: '🤳 趣味打卡', desc: '创意拍照点子' },
+    ],
+  }
+
+  const getStyleOptions = (templateType) => {
+    return STYLE_OPTIONS[templateType] || STYLE_OPTIONS.travel_copy
+  }
+
+  const handleStyleSelect = (templateType, styleKey) => {
+    setStyleModalOpen(false)
+    handleAIGenerate(styleKey)
+  }
 
   useEffect(() => {
     if (visible && poi) {
@@ -445,7 +479,7 @@ const PoiDetailModal = ({ visible, poi, onClose, nestedMode = false, onOpenNeste
                 <Button
                   block
                   icon={<FileTextOutlined />}
-                  onClick={() => handleAIGenerate('travel_copy')}
+                  onClick={() => { setPendingTemplateType('travel_copy'); setStyleModalOpen(true); }}
                   style={{ height: 40, borderRadius: 8 }}
                 >
                   游玩文案
@@ -455,7 +489,7 @@ const PoiDetailModal = ({ visible, poi, onClose, nestedMode = false, onOpenNeste
                 <Button
                   block
                   icon={<FileTextOutlined />}
-                  onClick={() => handleAIGenerate('punch_card')}
+                  onClick={() => { setPendingTemplateType('punch_card'); setStyleModalOpen(true); }}
                   style={{ height: 40, borderRadius: 8 }}
                 >
                   打卡攻略
@@ -465,7 +499,7 @@ const PoiDetailModal = ({ visible, poi, onClose, nestedMode = false, onOpenNeste
                 <Button
                   block
                   icon={<FileTextOutlined />}
-                  onClick={() => handleAIGenerate('photo_spots')}
+                  onClick={() => { setPendingTemplateType('photo_spots'); setStyleModalOpen(true); }}
                   style={{ height: 40, borderRadius: 8 }}
                 >
                   拍照建议
@@ -494,6 +528,54 @@ const PoiDetailModal = ({ visible, poi, onClose, nestedMode = false, onOpenNeste
           </div>
         </div>
       </Spin>
+
+      <Modal
+        title={
+          <Space>
+            <FormatPainterOutlined style={{ color: '#722ed1' }} />
+            选择生成风格
+          </Space>
+        }
+        open={styleModalOpen}
+        onCancel={() => setStyleModalOpen(false)}
+        footer={null}
+        width={520}
+      >
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+          {getStyleOptions(pendingTemplateType).map(option => (
+            <div
+              key={option.key}
+              onClick={() => handleStyleSelect(pendingTemplateType, option.key)}
+              style={{
+                padding: 16,
+                borderRadius: 12,
+                border: '2px solid #f0f0f0',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                background: '#fafafa',
+              }}
+              onMouseEnter={e => {
+                e.target.style.borderColor = '#722ed1'
+                e.target.style.background = '#f9f0ff'
+              }}
+              onMouseLeave={e => {
+                e.target.style.borderColor = '#f0f0f0'
+                e.target.style.background = '#fafafa'
+              }}
+            >
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>
+                {option.name}
+              </div>
+              <div style={{ fontSize: 12, color: '#888' }}>
+                {option.desc}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 16, textAlign: 'center', color: '#999', fontSize: 12 }}>
+          💡 选择一种风格后，AI将为您生成对应的内容
+        </div>
+      </Modal>
 
       <Modal
         title={
