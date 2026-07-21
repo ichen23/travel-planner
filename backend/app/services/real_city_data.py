@@ -159,6 +159,7 @@ REAL_CITY_DATA = {
     "内丘县": {"name": "内丘县", "province": "河北省", "lng": 114.5000, "lat": 37.2830, "type": "县", "parent": "邢台市"},
     "柏乡县": {"name": "柏乡县", "province": "河北省", "lng": 114.6830, "lat": 37.3000, "type": "县", "parent": "邢台市"},
     "隆尧县": {"name": "隆尧县", "province": "河北省", "lng": 114.7500, "lat": 37.3500, "type": "县", "parent": "邢台市"},
+    "临西县": {"name": "临西县", "province": "河北省", "lng": 115.5010, "lat": 36.8708, "type": "县", "parent": "邢台市"},
     "南宫市": {"name": "南宫市", "province": "河北省", "lng": 115.3830, "lat": 37.3500, "type": "县级市", "parent": "邢台市"},
     "沙河市": {"name": "沙河市", "province": "河北省", "lng": 114.5000, "lat": 36.8670, "type": "县级市", "parent": "邢台市"},
 
@@ -273,6 +274,7 @@ REAL_CITY_DATA = {
     "城区": {"name": "城区", "province": "山西省", "lng": 113.5830, "lat": 37.8670, "type": "市辖区", "parent": "阳泉市"},
     "矿区": {"name": "矿区", "province": "山西省", "lng": 113.5330, "lat": 37.8670, "type": "市辖区", "parent": "阳泉市"},
     "郊区": {"name": "郊区", "province": "山西省", "lng": 113.5670, "lat": 37.8330, "type": "市辖区", "parent": "阳泉市"},
+    "荫营镇": {"name": "荫营镇", "province": "山西省", "lng": 113.5719, "lat": 37.9395, "type": "镇", "parent": "郊区"},
     "平定县": {"name": "平定县", "province": "山西省", "lng": 113.7170, "lat": 37.8330, "type": "县", "parent": "阳泉市"},
     "盂县": {"name": "盂县", "province": "山西省", "lng": 113.4170, "lat": 38.0330, "type": "县", "parent": "阳泉市"},
 
