@@ -541,6 +541,14 @@ def get_city_attractions(city: str) -> list:
     if city in CITY_STATIC_DATA:
         return CITY_STATIC_DATA[city]["attractions"]
     
+    # 检查扩展数据
+    try:
+        from app.services.extended_data_loader import EXTENDED_CITIES_DATA
+        if city in EXTENDED_CITIES_DATA:
+            return EXTENDED_CITIES_DATA[city]["attractions"]
+    except ImportError:
+        pass
+    
     city_info = {}
     if city in CITY_BASIC_INFO:
         city_info = CITY_BASIC_INFO[city]
@@ -599,6 +607,14 @@ def get_city_food(city: str) -> list:
     if city in CITY_STATIC_DATA:
         return CITY_STATIC_DATA[city]["food"]
     
+    # 检查扩展数据
+    try:
+        from app.services.extended_data_loader import EXTENDED_CITIES_DATA
+        if city in EXTENDED_CITIES_DATA:
+            return EXTENDED_CITIES_DATA[city]["food"]
+    except ImportError:
+        pass
+    
     return [
         {"name": f"{city}特色美食", "location": "市中心", "price_range": "30-60元", "recommend": "当地特色菜", "type": "正餐"},
         {"name": f"{city}小吃街", "location": "老城区", "price_range": "20-40元", "recommend": "各种特色小吃", "type": "小吃"},
@@ -611,6 +627,14 @@ def get_city_info_data(city: str) -> dict:
     
     if city in CITY_STATIC_DATA:
         return CITY_STATIC_DATA[city]
+    
+    # 检查扩展数据
+    try:
+        from app.services.extended_data_loader import EXTENDED_CITIES_DATA
+        if city in EXTENDED_CITIES_DATA:
+            return EXTENDED_CITIES_DATA[city]
+    except ImportError:
+        pass
     
     city_info = {}
     if city in CITY_BASIC_INFO:
