@@ -9,6 +9,33 @@ from app.services.city_database import (
 )
 
 
+def normalize_city_name(city: str) -> str:
+    """规范化城市名称，处理'市'、'省'、'特别行政区'等后缀"""
+    if not city:
+        return city
+    
+    suffixes = ['特别行政区', '自治区', '自治州', '地区', '盟', '省', '市', '区', '县']
+    normalized = city
+    
+    for suffix in suffixes:
+        if normalized.endswith(suffix) and len(normalized) > len(suffix):
+            normalized = normalized[:-len(suffix)]
+            break
+    
+    if normalized in CITY_STATIC_DATA:
+        return normalized
+    if normalized in CITY_BASIC_INFO:
+        return normalized
+    if normalized in MASS_CITY_INFO:
+        return normalized
+    if normalized in MEGA_CITY_INFO:
+        return normalized
+    if normalized in EXTENDED_CITY_BASIC_INFO:
+        return normalized
+    
+    return city
+
+
 CITY_STATIC_DATA = {
     "开封": {
         "attractions": [
@@ -358,6 +385,8 @@ def format_time(hour: int, minute: int = 0) -> str:
 
 
 def get_city_attractions(city: str) -> list:
+    city = normalize_city_name(city)
+    
     if city in CITY_STATIC_DATA:
         return CITY_STATIC_DATA[city]["attractions"]
     
@@ -414,6 +443,8 @@ def get_city_attractions(city: str) -> list:
 
 
 def get_city_food(city: str) -> list:
+    city = normalize_city_name(city)
+    
     if city in CITY_STATIC_DATA:
         return CITY_STATIC_DATA[city]["food"]
     
@@ -425,6 +456,8 @@ def get_city_food(city: str) -> list:
 
 
 def get_city_info_data(city: str) -> dict:
+    city = normalize_city_name(city)
+    
     if city in CITY_STATIC_DATA:
         return CITY_STATIC_DATA[city]
     
