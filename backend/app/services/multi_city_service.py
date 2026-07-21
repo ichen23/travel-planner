@@ -197,6 +197,157 @@ CITY_STATIC_DATA = {
         ],
         "transport": "地铁覆盖主要景点；中山陵有观光车；市内打车方便",
         "tips": "南京博物院周一闭馆；夫子庙夜游值得；牛首山建议早上避免人流"
+    },
+    "郑州": {
+        "attractions": [
+            {"name": "少林寺", "start_time": "08:00", "duration_hours": 3, "best_period": "morning", "ticket": "100元", "rating": 5, "tags": ["历史", "必去", "武术"], "tips": "禅宗祖庭，少林武术发源地"},
+            {"name": "河南博物院", "start_time": "09:00", "duration_hours": 4, "best_period": "morning", "ticket": "免费（需预约）", "rating": 5, "tags": ["文化", "必去"], "tips": "中国九大博物院之一，文物丰富"},
+            {"name": "二七纪念塔", "start_time": "10:00", "duration_hours": 1.5, "best_period": "morning", "ticket": "免费", "rating": 4, "tags": ["历史", "地标"], "tips": "郑州标志性建筑，可登顶观景"},
+            {"name": "黄河风景名胜区", "start_time": "14:00", "duration_hours": 4, "best_period": "afternoon", "ticket": "60元", "rating": 4, "tags": ["自然", "必去"], "tips": "黄河岸边，可看到浊浪滔天"},
+            {"name": "方特欢乐世界", "start_time": "10:00", "duration_hours": 6, "best_period": "afternoon", "ticket": "260元", "rating": 4, "tags": ["娱乐", "亲子"], "tips": "大型主题乐园，适合年轻人"},
+            {"name": "中原大佛", "start_time": "08:00", "duration_hours": 3, "best_period": "morning", "ticket": "120元", "rating": 4, "tags": ["宗教", "打卡"], "tips": "世界最大的露天大佛"}
+        ],
+        "food": [
+            {"name": "合记烩面", "location": "人民路", "price_range": "20-40元", "recommend": "羊肉烩面、牛肉烩面", "type": "特色"},
+            {"name": "葛记焖饼", "location": "黄河路", "price_range": "15-30元", "recommend": "金丝焖饼", "type": "特色"},
+            {"name": "萧记三鲜烩面", "location": "多家分店", "price_range": "25-45元", "recommend": "三鲜烩面", "type": "特色"},
+            {"name": "郑州烤鸭店", "location": "紫荆山", "price_range": "50-100元", "recommend": "烤鸭、黄河鲤鱼", "type": "中餐"}
+        ],
+        "transport": "地铁1-5号线，公交覆盖全城",
+        "tips": "河南博物院周一闭馆；少林寺建议上午去；方特适合年轻人"
+    },
+    "济南": {
+        "attractions": [
+            {"name": "趵突泉", "start_time": "08:00", "duration_hours": 2, "best_period": "morning", "ticket": "40元", "rating": 5, "tags": ["自然", "必去"], "tips": "天下第一泉，济南标志性景点"},
+            {"name": "大明湖", "start_time": "09:00", "duration_hours": 3, "best_period": "morning", "ticket": "免费", "rating": 4, "tags": ["自然", "必去"], "tips": "济南三大名胜之一，可乘船游览"},
+            {"name": "千佛山", "start_time": "07:00", "duration_hours": 3, "best_period": "morning", "ticket": "30元", "rating": 4, "tags": ["自然", "登山"], "tips": "俯瞰济南全城，早上空气好"},
+            {"name": "黑虎泉", "start_time": "10:00", "duration_hours": 1.5, "best_period": "morning", "ticket": "免费", "rating": 4, "tags": ["自然", "免费"], "tips": "济南名泉之一，可接泉水饮用"},
+            {"name": "芙蓉街", "start_time": "14:00", "duration_hours": 2, "best_period": "afternoon", "ticket": "免费", "rating": 4, "tags": ["美食", "古街"], "tips": "济南特色小吃一条街"},
+            {"name": "红叶谷", "start_time": "10:00", "duration_hours": 4, "best_period": "afternoon", "ticket": "100元", "rating": 4, "tags": ["自然", "秋季"], "tips": "秋季看红叶的好地方"}
+        ],
+        "food": [
+            {"name": "草包包子铺", "location": "普利街", "price_range": "15-30元", "recommend": "猪肉包子、素馅包子", "type": "特色"},
+            {"name": "油旋张", "location": "芙蓉街", "price_range": "5-10元", "recommend": "油旋", "type": "小吃"},
+            {"name": "甜沫唐", "location": "多家分店", "price_range": "10-20元", "recommend": "甜沫、油条", "type": "早餐"},
+            {"name": "老济南把子肉", "location": "经十路", "price_range": "25-50元", "recommend": "把子肉、米饭", "type": "特色"}
+        ],
+        "transport": "地铁1-3号线，公交发达",
+        "tips": "趵突泉和大明湖相邻，可一起游览；黑虎泉可以接泉水喝"
+    },
+    "青岛": {
+        "attractions": [
+            {"name": "栈桥", "start_time": "08:00", "duration_hours": 2, "best_period": "morning", "ticket": "免费", "rating": 4, "tags": ["地标", "免费"], "tips": "青岛标志性建筑，可喂海鸥"},
+            {"name": "八大关", "start_time": "09:00", "duration_hours": 3, "best_period": "morning", "ticket": "免费", "rating": 4, "tags": ["建筑", "拍照"], "tips": "万国建筑博览会，适合拍照"},
+            {"name": "五四广场", "start_time": "10:00", "duration_hours": 1.5, "best_period": "morning", "ticket": "免费", "rating": 4, "tags": ["地标", "夜景"], "tips": "青岛新城区中心，夜景漂亮"},
+            {"name": "崂山", "start_time": "07:00", "duration_hours": 6, "best_period": "morning", "ticket": "130元", "rating": 5, "tags": ["自然", "必去"], "tips": "海上名山第一，建议一日游"},
+            {"name": "金沙滩", "start_time": "14:00", "duration_hours": 4, "best_period": "afternoon", "ticket": "免费", "rating": 4, "tags": ["海滩", "夏季"], "tips": "亚洲第一滩，适合夏季游泳"},
+            {"name": "极地海洋世界", "start_time": "10:00", "duration_hours": 4, "best_period": "afternoon", "ticket": "220元", "rating": 4, "tags": ["亲子", "娱乐"], "tips": "大型海洋主题公园"},
+            {"name": "啤酒博物馆", "start_time": "14:00", "duration_hours": 2, "best_period": "afternoon", "ticket": "50元", "rating": 4, "tags": ["文化", "打卡"], "tips": "了解青岛啤酒历史，可品尝新鲜啤酒"}
+        ],
+        "food": [
+            {"name": "船歌鱼水饺", "location": "多家分店", "price_range": "50-100元", "recommend": "鲅鱼水饺、墨鱼水饺", "type": "特色"},
+            {"name": "青岛啤酒街", "location": "登州路", "price_range": "30-80元", "recommend": "原浆啤酒、海鲜烧烤", "type": "特色"},
+            {"name": "春和楼", "location": "中山路", "price_range": "80-150元", "recommend": "香酥鸡、海鲜", "type": "中餐"},
+            {"name": "辣炒蛤蜊", "location": "大排档", "price_range": "30-50元", "recommend": "辣炒蛤蜊、烤鱿鱼", "type": "小吃"}
+        ],
+        "transport": "地铁1-4号线，沿海公交专线",
+        "tips": "崂山建议包车或跟团；啤酒博物馆可以喝到新鲜原浆啤酒；夏季海边注意防晒"
+    },
+    "西安": {
+        "attractions": [
+            {"name": "秦始皇兵马俑", "start_time": "08:00", "duration_hours": 4, "best_period": "morning", "ticket": "120元", "rating": 5, "tags": ["历史", "必去"], "tips": "世界第八大奇迹，必去！"},
+            {"name": "大雁塔", "start_time": "09:00", "duration_hours": 2, "best_period": "morning", "ticket": "40元", "rating": 4, "tags": ["历史", "地标"], "tips": "唐代佛教建筑，可登塔观景"},
+            {"name": "西安城墙", "start_time": "08:00", "duration_hours": 3, "best_period": "morning", "ticket": "54元", "rating": 5, "tags": ["历史", "必去"], "tips": "中国现存最完整的古城墙，可骑自行车"},
+            {"name": "华清宫", "start_time": "10:00", "duration_hours": 3, "best_period": "morning", "ticket": "120元", "rating": 4, "tags": ["历史", "温泉"], "tips": "唐明皇与杨贵妃的行宫"},
+            {"name": "陕西历史博物馆", "start_time": "09:00", "duration_hours": 4, "best_period": "morning", "ticket": "免费（需预约）", "rating": 5, "tags": ["文化", "必去"], "tips": "国家级博物馆，文物丰富"},
+            {"name": "回民街", "start_time": "14:00", "duration_hours": 3, "best_period": "afternoon", "ticket": "免费", "rating": 4, "tags": ["美食", "夜景"], "tips": "西安美食聚集地，晚上热闹"},
+            {"name": "大唐不夜城", "start_time": "18:00", "duration_hours": 3, "best_period": "evening", "ticket": "免费", "rating": 5, "tags": ["夜景", "打卡"], "tips": "盛唐主题街区，夜景壮观"}
+        ],
+        "food": [
+            {"name": "老孙家泡馍", "location": "东大街", "price_range": "30-60元", "recommend": "羊肉泡馍、牛肉泡馍", "type": "特色"},
+            {"name": "回民街小吃", "location": "北院门", "price_range": "20-50元", "recommend": "肉夹馍、凉皮、甑糕", "type": "小吃"},
+            {"name": "魏家凉皮", "location": "多家分店", "price_range": "15-30元", "recommend": "秘制凉皮", "type": "小吃"},
+            {"name": "西安饭庄", "location": "东大街", "price_range": "80-150元", "recommend": "葫芦鸡、水晶饼", "type": "中餐"}
+        ],
+        "transport": "地铁1-4号线，公交发达",
+        "tips": "兵马俑建议早上早去避开人流；陕博周一闭馆；城墙骑车一圈约2小时"
+    },
+    "重庆": {
+        "attractions": [
+            {"name": "洪崖洞", "start_time": "18:00", "duration_hours": 2, "best_period": "evening", "ticket": "免费", "rating": 5, "tags": ["夜景", "打卡"], "tips": "千与千寻原型，夜景必看"},
+            {"name": "解放碑", "start_time": "10:00", "duration_hours": 2, "best_period": "morning", "ticket": "免费", "rating": 4, "tags": ["地标", "购物"], "tips": "重庆地标，周边商圈繁华"},
+            {"name": "磁器口古镇", "start_time": "09:00", "duration_hours": 3, "best_period": "morning", "ticket": "免费", "rating": 4, "tags": ["古街", "美食"], "tips": "千年古镇，小吃众多"},
+            {"name": "长江索道", "start_time": "09:00", "duration_hours": 1, "best_period": "morning", "ticket": "单程20元", "rating": 4, "tags": ["体验", "打卡"], "tips": "空中看重庆，网红项目"},
+            {"name": "武隆天坑", "start_time": "07:00", "duration_hours": 8, "best_period": "morning", "ticket": "175元", "rating": 5, "tags": ["自然", "必去"], "tips": "世界自然遗产，建议一日游"},
+            {"name": "鹅岭二厂", "start_time": "14:00", "duration_hours": 2, "best_period": "afternoon", "ticket": "免费", "rating": 4, "tags": ["文艺", "拍照"], "tips": "网红打卡地，文艺范"},
+            {"name": "李子坝轻轨", "start_time": "08:00", "duration_hours": 1, "best_period": "morning", "ticket": "免费", "rating": 4, "tags": ["打卡", "交通"], "tips": "轻轨穿楼，网红景点"}
+        ],
+        "food": [
+            {"name": "小天鹅火锅", "location": "解放碑", "price_range": "80-150元", "recommend": "毛肚、鸭肠、黄喉", "type": "火锅"},
+            {"name": "重庆小面", "location": "街边摊", "price_range": "10-20元", "recommend": "麻辣小面、豌杂面", "type": "小吃"},
+            {"name": "酸辣粉", "location": "解放碑", "price_range": "15-25元", "recommend": "手工酸辣粉", "type": "小吃"},
+            {"name": "泉水鸡", "location": "南山", "price_range": "60-120元", "recommend": "泉水鸡、烧鸡公", "type": "特色"}
+        ],
+        "transport": "地铁1-10号线，轻轨特色",
+        "tips": "洪崖洞晚上最美；长江索道排队久可买往返票；武隆建议包车"
+    },
+    "成都": {
+        "attractions": [
+            {"name": "宽窄巷子", "start_time": "09:00", "duration_hours": 2, "best_period": "morning", "ticket": "免费", "rating": 4, "tags": ["古街", "文化"], "tips": "成都慢生活体验地"},
+            {"name": "锦里古街", "start_time": "10:00", "duration_hours": 2, "best_period": "morning", "ticket": "免费", "rating": 4, "tags": ["古街", "美食"], "tips": "三国文化主题街区"},
+            {"name": "大熊猫繁育研究基地", "start_time": "07:30", "duration_hours": 4, "best_period": "morning", "ticket": "55元", "rating": 5, "tags": ["必去", "亲子"], "tips": "看大熊猫，早上活跃"},
+            {"name": "武侯祠", "start_time": "09:00", "duration_hours": 2, "best_period": "morning", "ticket": "50元", "rating": 4, "tags": ["历史", "文化"], "tips": "三国文化圣地"},
+            {"name": "杜甫草堂", "start_time": "09:00", "duration_hours": 2, "best_period": "morning", "ticket": "50元", "rating": 4, "tags": ["文化", "园林"], "tips": "诗圣故居"},
+            {"name": "都江堰", "start_time": "07:00", "duration_hours": 6, "best_period": "morning", "ticket": "80元", "rating": 5, "tags": ["历史", "必去"], "tips": "世界遗产，古代水利工程"},
+            {"name": "春熙路", "start_time": "14:00", "duration_hours": 3, "best_period": "afternoon", "ticket": "免费", "rating": 4, "tags": ["购物", "夜景"], "tips": "成都最繁华商业街"}
+        ],
+        "food": [
+            {"name": "小龙坎火锅", "location": "春熙路", "price_range": "80-150元", "recommend": "毛肚、鹅肠、酥肉", "type": "火锅"},
+            {"name": "陈麻婆豆腐", "location": "青华路", "price_range": "40-80元", "recommend": "麻婆豆腐、回锅肉", "type": "川菜"},
+            {"name": "龙抄手", "location": "春熙路", "price_range": "20-40元", "recommend": "红油抄手、钟水饺", "type": "小吃"},
+            {"name": "担担面", "location": "街边店", "price_range": "10-20元", "recommend": "麻辣担担面", "type": "小吃"}
+        ],
+        "transport": "地铁1-7号线，公交发达",
+        "tips": "熊猫基地早上熊猫最活跃；都江堰建议一日游；宽窄巷子比锦里清静"
+    },
+    "杭州": {
+        "attractions": [
+            {"name": "西湖", "start_time": "07:00", "duration_hours": 4, "best_period": "morning", "ticket": "免费", "rating": 5, "tags": ["必去", "自然"], "tips": "杭州灵魂，绕湖步行或骑车"},
+            {"name": "灵隐寺", "start_time": "08:00", "duration_hours": 3, "best_period": "morning", "ticket": "75元", "rating": 5, "tags": ["历史", "宗教"], "tips": "千年古刹，飞来峰石刻"},
+            {"name": "千岛湖", "start_time": "07:00", "duration_hours": 8, "best_period": "morning", "ticket": "150元", "rating": 5, "tags": ["自然", "必去"], "tips": "天下第一秀水，建议一日游"},
+            {"name": "宋城", "start_time": "14:00", "duration_hours": 5, "best_period": "afternoon", "ticket": "310元", "rating": 5, "tags": ["主题", "演出"], "tips": "宋城千古情必看"},
+            {"name": "西溪湿地", "start_time": "09:00", "duration_hours": 3, "best_period": "morning", "ticket": "80元", "rating": 4, "tags": ["自然", "生态"], "tips": "城市湿地，乘船游览"},
+            {"name": "雷峰塔", "start_time": "10:00", "duration_hours": 2, "best_period": "morning", "ticket": "40元", "rating": 4, "tags": ["地标", "夜景"], "tips": "登塔看西湖全景"},
+            {"name": "河坊街", "start_time": "14:00", "duration_hours": 2, "best_period": "afternoon", "ticket": "免费", "rating": 4, "tags": ["古街", "美食"], "tips": "南宋御街，特色小吃"}
+        ],
+        "food": [
+            {"name": "楼外楼", "location": "孤山", "price_range": "150-300元", "recommend": "西湖醋鱼、龙井虾仁、东坡肉", "type": "浙菜"},
+            {"name": "知味观", "location": "湖滨", "price_range": "60-120元", "recommend": "片儿川、小笼包", "type": "特色"},
+            {"name": "外婆家", "location": "多家分店", "price_range": "50-100元", "recommend": "茶香鸡、麻婆豆腐", "type": "杭帮菜"},
+            {"name": "葱包桧", "location": "河坊街", "price_range": "10-20元", "recommend": "葱包桧、定胜糕", "type": "小吃"}
+        ],
+        "transport": "地铁1-5号线，公交发达",
+        "tips": "西湖早晚最美；千岛湖建议跟团或包车；灵隐寺早上人少"
+    },
+    "北京": {
+        "attractions": [
+            {"name": "故宫博物院", "start_time": "08:30", "duration_hours": 5, "best_period": "morning", "ticket": "60元", "rating": 5, "tags": ["历史", "必去"], "tips": "紫禁城，建议提前预约门票"},
+            {"name": "八达岭长城", "start_time": "07:00", "duration_hours": 6, "best_period": "morning", "ticket": "40元", "rating": 5, "tags": ["历史", "必去"], "tips": "万里长城，建议早去避人流"},
+            {"name": "天安门广场", "start_time": "06:00", "duration_hours": 2, "best_period": "morning", "ticket": "免费", "rating": 5, "tags": ["地标", "必去"], "tips": "看升旗仪式，需安检"},
+            {"name": "颐和园", "start_time": "08:00", "duration_hours": 4, "best_period": "morning", "ticket": "30元", "rating": 5, "tags": ["历史", "园林"], "tips": "皇家园林，昆明湖游船"},
+            {"name": "天坛", "start_time": "07:30", "duration_hours": 3, "best_period": "morning", "ticket": "15元", "rating": 5, "tags": ["历史", "必去"], "tips": "明清皇帝祭天之所"},
+            {"name": "圆明园", "start_time": "08:00", "duration_hours": 3, "best_period": "morning", "ticket": "25元", "rating": 4, "tags": ["历史", "教育"], "tips": "遗址公园，勿忘国耻"},
+            {"name": "南锣鼓巷", "start_time": "14:00", "duration_hours": 2, "best_period": "afternoon", "ticket": "免费", "rating": 4, "tags": ["古街", "文艺"], "tips": "老北京胡同文化"},
+            {"name": "什刹海", "start_time": "15:00", "duration_hours": 3, "best_period": "afternoon", "ticket": "免费", "rating": 4, "tags": ["自然", "夜景"], "tips": "后海酒吧街，夜景热闹"}
+        ],
+        "food": [
+            {"name": "全聚德烤鸭", "location": "前门", "price_range": "200-400元", "recommend": "挂炉烤鸭", "type": "京菜"},
+            {"name": "东来顺涮羊肉", "location": "王府井", "price_range": "150-300元", "recommend": "铜锅涮肉", "type": "火锅"},
+            {"name": "炸酱面", "location": "老北京面馆", "price_range": "20-40元", "recommend": "北京炸酱面", "type": "特色"},
+            {"name": "豆汁焦圈", "location": "老北京小吃", "price_range": "10-20元", "recommend": "豆汁、焦圈、咸菜", "type": "小吃"}
+        ],
+        "transport": "地铁1-16号线，公交发达",
+        "tips": "故宫、长城建议提前预约；天安门需安检；颐和园和圆明园可一起游览"
     }
 }
 
