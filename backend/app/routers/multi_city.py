@@ -64,7 +64,6 @@ async def get_supported_cities():
     all_city_names.update(MASS_CITY_INFO.keys())
     all_city_names.update(MEGA_CITY_INFO.keys())
     all_city_names.update(EXTENDED_CITY_BASIC_INFO.keys())
-    all_city_names.update(ALL_CITY_COORDS.keys())
     
     all_city_names = sorted(all_city_names)
     

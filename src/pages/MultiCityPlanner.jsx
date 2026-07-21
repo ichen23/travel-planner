@@ -358,7 +358,6 @@ export default function MultiCityPlanner() {
                     }}
                     optionFilterProp="searchValue"
                     listHeight={300}
-                    virtual={false}
                   >
                     {cityOptions.map(c => (
                       <Select.Option 
