@@ -66,50 +66,16 @@ async def recommend_destinations(from_city: str, travel_date: str,
         elif rec["city"] in BEIJING_3HR_COORDS:
             rec["lng"] = BEIJING_3HR_COORDS[rec["city"]][0]
             rec["lat"] = BEIJING_3HR_COORDS[rec["city"]][1]
-        else:
-            geo = await geocode_city(rec["city"])
-            if geo:
-                rec["lng"] = geo["lng"]
-                rec["lat"] = geo["lat"]
         
         city_info = get_city_info(rec["city"])
         rec["tags"] = city_info.get("tags", [])
         rec["image"] = city_info.get("image", "")
         rec["rating"] = city_info.get("rating", 4.5)
-        
-        real_data = await get_city_real_data(rec["city"])
-        
-        attractions = real_data.get('attractions', [])[:5]
-        foods = real_data.get('foods', [])[:3]
-        
-        rec["tips"] = {
-            "attractions": [
-                {
-                    "name": a.get('name', '') if isinstance(a, dict) else str(a),
-                    "address": a.get('address', '') if isinstance(a, dict) else '',
-                    "lng": a.get('lng') if isinstance(a, dict) else None,
-                    "lat": a.get('lat') if isinstance(a, dict) else None,
-                    "rating": a.get('rating', 0) if isinstance(a, dict) else 0,
-                } if isinstance(a, dict) else {"name": str(a), "address": "", "lng": None, "lat": None, "rating": 0}
-                for a in attractions
-            ] if attractions else [],
-            "food": [
-                {
-                    "name": f.get('name', '') if isinstance(f, dict) else str(f),
-                    "address": f.get('address', '') if isinstance(f, dict) else '',
-                    "lng": f.get('lng') if isinstance(f, dict) else None,
-                    "lat": f.get('lat') if isinstance(f, dict) else None,
-                } if isinstance(f, dict) else {"name": str(f), "address": "", "lng": None, "lat": None}
-                for f in foods
-            ] if foods else [],
-        }
-        rec["highlights"] = [a.get('name', '') if isinstance(a, dict) else str(a) for a in attractions[:3]] if attractions else []
-        
-        if not rec.get("description") or rec["description"] == f"{rec['city']}是中国著名城市" or rec["description"] == "":
-            rec["description"] = city_info.get("description", f"{rec['city']}是中国一座具有独特魅力的城市")
-        
+        rec["description"] = city_info.get("description", f"{rec['city']}是中国一座具有独特魅力的城市")
         rec["avg_daily_budget"] = city_info.get("avg_daily_budget", 400)
-    
+        rec["highlights"] = city_info.get("highlights", "")
+        rec["tips"] = {"attractions": [], "food": []}
+
     return recommendations
 
 
