@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Card, Row, Col, Select, InputNumber, Button, Tag, Typography, Spin, Empty, Slider, message, Divider, Progress, Avatar, Badge, Tooltip, Collapse } from 'antd'
+import { Card, Row, Col, Select, InputNumber, Button, Tag, Typography, Spin, Empty, Slider, message, Divider, Progress, Avatar, Badge, Tooltip, Collapse, Modal } from 'antd'
 import { GiftOutlined, ThunderboltOutlined, DollarOutlined, CalendarOutlined, BulbOutlined, ReloadOutlined, ArrowRightOutlined, StarOutlined, FireOutlined, CrownOutlined, RocketOutlined, ShareAltOutlined, SwapOutlined, HeartOutlined, SmileOutlined, TrophyOutlined, ThunderboltFilled, EnvironmentOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { getRecommendations } from '../services/trainService'
@@ -42,6 +42,21 @@ const LUCKY_RANKS = [
 ]
 
 const ZODIAC_SIGNS = ['♈ 白羊座', '♉ 金牛座', '♊ 双子座', '♋ 巨蟹座', '♌ 狮子座', '♍ 处女座', '♎ 天秤座', '♏ 天蝎座', '♐ 射手座', '♑ 摩羯座', '♒ 水瓶座', '♓ 双鱼座']
+
+const ACHIEVEMENTS = [
+  { id: 'first_spin', name: '初出茅庐', icon: '🎁', desc: '第一次开启盲盒', condition: (stats) => stats.totalSpins >= 1 },
+  { id: 'five_spins', name: '盲盒达人', icon: '🎰', desc: '开启5次盲盒', condition: (stats) => stats.totalSpins >= 5 },
+  { id: 'ten_spins', name: '上瘾了', icon: '🔥', desc: '开启10次盲盒', condition: (stats) => stats.totalSpins >= 10 },
+  { id: 'ssr_achievement', name: '欧皇降临', icon: '👑', desc: '抽到SSR评级', condition: (stats) => stats.maxRank === 'SSR' },
+  { id: 'sr_achievement', name: '幸运之星', icon: '🌟', desc: '抽到SR评级', condition: (stats) => stats.maxRank === 'SR' },
+  { id: 'explorer', name: '探索者', icon: '🗺️', desc: '探索3个不同城市', condition: (stats) => stats.uniqueCities >= 3 },
+  { id: 'traveler', name: '旅行家', icon: '✈️', desc: '探索5个不同城市', condition: (stats) => stats.uniqueCities >= 5 },
+  { id: 'foodie', name: '美食家', icon: '🍜', desc: '抽到美食主题盲盒', condition: (stats) => stats.themes.includes('food') },
+  { id: 'nature_lover', name: '自然爱好者', icon: '🏔️', desc: '抽到山水主题盲盒', condition: (stats) => stats.themes.includes('nature') },
+  { id: 'history_buff', name: '历史迷', icon: '🏛️', desc: '抽到古城主题盲盒', condition: (stats) => stats.themes.includes('ancient') },
+  { id: 'romantic', name: '浪漫主义者', icon: '💕', desc: '抽到情侣主题盲盒', condition: (stats) => stats.themes.includes('romance') },
+  { id: 'beach_lover', name: '沙滩爱好者', icon: '🏖️', desc: '抽到海滨主题盲盒', condition: (stats) => stats.themes.includes('sea') },
+]
 
 const FORTUNE_TEXTS = [
   '今日宜出行，忌宅家！',
@@ -192,6 +207,31 @@ export default function BlindBoxPage() {
   const [achievements, setAchievements] = useState([])
   const [showAchievement, setShowAchievement] = useState(false)
   const [shareModal, setShareModal] = useState(false)
+  const [stats, setStats] = useState(() => {
+    const saved = localStorage.getItem('blindBoxStats')
+    return saved ? JSON.parse(saved) : {
+      totalSpins: 0,
+      unlockedAchievements: [],
+      visitedCities: [],
+      themes: [],
+      maxRank: null
+    }
+  })
+  const [newAchievement, setNewAchievement] = useState(null)
+
+  useEffect(() => {
+    localStorage.setItem('blindBoxStats', JSON.stringify(stats))
+  }, [stats])
+
+  const checkAchievements = (currentStats) => {
+    const newlyUnlocked = []
+    for (const ach of ACHIEVEMENTS) {
+      if (!currentStats.unlockedAchievements.includes(ach.id) && ach.condition(currentStats)) {
+        newlyUnlocked.push(ach)
+      }
+    }
+    return newlyUnlocked
+  }
 
   const generateBlindBox = useCallback(async () => {
     const animation = getRandomItem(OPENING_ANIMATIONS)
@@ -322,6 +362,57 @@ export default function BlindBoxPage() {
           foodSpots: selectedDest.tips?.food_spots || ['美食街'],
           history: [selectedDest.city],
         })
+
+        const themeKeywords = {
+          food: ['美食', '吃货', '味觉', '味蕾'],
+          nature: ['山水', '自然', '风景', '风光', '海', '岛'],
+          ancient: ['古城', '古镇', '历史', '文化', '古迹'],
+          romance: ['浪漫', '情侣', '蜜月', '爱情'],
+          sea: ['海', '沙滩', '海岛', '海滨']
+        }
+        
+        let matchedTheme = 'random'
+        const desc = selectedDest.description || ''
+        const highlights = selectedDest.highlights || ''
+        const fullText = desc + highlights
+        for (const [key, keywords] of Object.entries(themeKeywords)) {
+          if (keywords.some(kw => fullText.includes(kw))) {
+            matchedTheme = key
+            break
+          }
+        }
+
+        setStats(prev => {
+          const newStats = {
+            ...prev,
+            totalSpins: prev.totalSpins + 1,
+            visitedCities: prev.visitedCities.includes(selectedDest.city) 
+              ? prev.visitedCities 
+              : [...prev.visitedCities, selectedDest.city],
+            themes: prev.themes.includes(matchedTheme) 
+              ? prev.themes 
+              : [...prev.themes, matchedTheme],
+            maxRank: (prev.maxRank === 'SSR' || luckyRank.level === 'SSR') ? 'SSR' 
+              : (prev.maxRank === 'SR' || luckyRank.level === 'SR') ? 'SR' 
+              : (prev.maxRank === 'R' || luckyRank.level === 'R') ? 'R' : 'N'
+          }
+          
+          const newlyUnlocked = checkAchievements(newStats)
+          if (newlyUnlocked.length > 0) {
+            const latest = newlyUnlocked[newlyUnlocked.length - 1]
+            setNewAchievement(latest)
+            setShowAchievement(true)
+            setTimeout(() => {
+              setShowAchievement(false)
+              setNewAchievement(null)
+            }, 3000)
+            
+            newStats.unlockedAchievements = [...prev.unlockedAchievements, ...newlyUnlocked.map(a => a.id)]
+          }
+          
+          return newStats
+        })
+
       } else {
         message.error('获取目的地失败，请稍后再试')
       }
@@ -379,7 +470,7 @@ export default function BlindBoxPage() {
 
   return (
     <div className="page-container" style={{ maxWidth: 900, margin: '0 auto' }}>
-      {showAchievement && (
+      {showAchievement && newAchievement && (
         <div style={{
           position: 'fixed',
           top: 100,
@@ -387,12 +478,16 @@ export default function BlindBoxPage() {
           transform: 'translateX(-50%)',
           zIndex: 1000,
           background: 'linear-gradient(135deg, #ff6b6b, #ffd93d)',
-          padding: '16px 32px',
+          padding: '20px 40px',
           borderRadius: 16,
           boxShadow: '0 8px 32px rgba(255, 107, 107, 0.4)',
           animation: 'achievementPop 0.5s ease-out',
+          textAlign: 'center',
         }}>
-          <Text strong style={{ color: 'white', fontSize: 18 }}>🎉 传说级成就解锁！</Text>
+          <div style={{ fontSize: 40, marginBottom: 8 }}>{newAchievement.icon}</div>
+          <Text strong style={{ color: 'white', fontSize: 20 }}>成就解锁！</Text>
+          <div style={{ color: 'white', fontSize: 16, marginTop: 4 }}>{newAchievement.name}</div>
+          <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, marginTop: 4 }}>{newAchievement.desc}</div>
         </div>
       )}
 
@@ -842,7 +937,7 @@ export default function BlindBoxPage() {
                     type="primary" 
                     size="large"
                     icon={<RocketOutlined />}
-                    onClick={() => navigate(`/itinerary?city=${encodeURIComponent(result.cityName)}&days=${days}`)}
+                    onClick={() => navigate(`/planner?cities=${encodeURIComponent(result.cityName)}&days=${days}`)}
                     style={{ 
                       minWidth: 130, 
                       height: 48, 
@@ -997,9 +1092,18 @@ export default function BlindBoxPage() {
               </Button>
               <div style={{ marginTop: 12 }}>
                 <Text type="secondary" style={{ fontSize: 13 }}>
-                  已累计抽取 <Text strong style={{ color: '#ff6b6b' }}>{spinCount}</Text> 次 · 
-                  成就解锁 <Text strong style={{ color: '#ffd93d' }}>{achievements.length}</Text> 个
+                  已累计抽取 <Text strong style={{ color: '#ff6b6b' }}>{stats.totalSpins}</Text> 次 · 
+                  解锁 <Text strong style={{ color: '#ffd93d' }}>{stats.unlockedAchievements.length}</Text>/{ACHIEVEMENTS.length} 成就
                 </Text>
+                <div style={{ marginTop: 8 }}>
+                  <Button 
+                    size="small" 
+                    icon={<TrophyOutlined />}
+                    onClick={() => setShowAchievement(true)}
+                  >
+                    查看成就
+                  </Button>
+                </div>
               </div>
             </div>
           </Card>
@@ -1049,6 +1153,66 @@ export default function BlindBoxPage() {
           </Row>
         </>
       )}
+
+      <Modal
+        title={
+          <div style={{ textAlign: 'center' }}>
+            <TrophyOutlined style={{ fontSize: 24, color: '#ffd700', marginRight: 8 }} />
+            成就殿堂
+          </div>
+        }
+        open={showAchievement && !newAchievement}
+        onCancel={() => setShowAchievement(false)}
+        footer={null}
+        width={600}
+      >
+        <div style={{ marginBottom: 16, textAlign: 'center' }}>
+          <Progress 
+            percent={Math.round((stats.unlockedAchievements.length / ACHIEVEMENTS.length) * 100)} 
+            strokeColor={{ from: '#ff6b6b', to: '#ffd93d' }}
+          />
+          <Text type="secondary">
+            已解锁 {stats.unlockedAchievements.length}/{ACHIEVEMENTS.length} 个成就
+          </Text>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          {ACHIEVEMENTS.map(ach => {
+            const unlocked = stats.unlockedAchievements.includes(ach.id)
+            return (
+              <div 
+                key={ach.id}
+                style={{
+                  padding: 16,
+                  borderRadius: 12,
+                  background: unlocked 
+                    ? 'linear-gradient(135deg, #ffd70020, #ff6b6b20)' 
+                    : '#f5f5f5',
+                  border: unlocked ? '2px solid #ffd700' : '1px solid #e8e8e8',
+                  textAlign: 'center',
+                  opacity: unlocked ? 1 : 0.6,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <div style={{ fontSize: 32, marginBottom: 8, filter: unlocked ? 'none' : 'grayscale(100%)' }}>
+                  {unlocked ? ach.icon : '🔒'}
+                </div>
+                <div style={{ fontWeight: 'bold', fontSize: 13, marginBottom: 4 }}>
+                  {ach.name}
+                </div>
+                <div style={{ fontSize: 11, color: '#666' }}>
+                  {ach.desc}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        <div style={{ marginTop: 16, textAlign: 'center' }}>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            💡 继续抽取盲盒，解锁更多成就吧！
+          </Text>
+        </div>
+      </Modal>
 
       <style>{`
         @keyframes bounce {

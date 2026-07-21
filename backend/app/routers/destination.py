@@ -232,6 +232,7 @@ async def generate_itinerary(
     request: dict
 ):
     city = request.get("city")
+    cities = request.get("cities")
     days = request.get("days", 3)
     budget = request.get("budget", 3000)
     preference = request.get("preference", "")
@@ -254,11 +255,54 @@ async def generate_itinerary(
         "is_hiking": request.get("is_hiking", False),
     }
     
-    if not city:
+    if not city and not cities:
         return {"success": False, "message": "请选择目的地城市"}
     
-    itinerary = await generate_smart_itinerary(city, days, budget, preference, people, **extra_params)
-    return {"success": True, "city": city, "days": days, "budget": budget, "itinerary": itinerary}
+    city_list = []
+    if cities:
+        city_list = [c.strip() for c in cities.split(",") if c.strip()]
+    elif city:
+        city_list = [c.strip() for c in city.split(",") if c.strip()]
+    
+    if len(city_list) == 1:
+        itinerary = await generate_smart_itinerary(city_list[0], days, budget, preference, people, **extra_params)
+        return {"success": True, "city": city_list[0], "days": days, "budget": budget, "itinerary": itinerary}
+    else:
+        all_itineraries = []
+        days_per_city = max(1, days // len(city_list))
+        
+        for i, single_city in enumerate(city_list):
+            try:
+                city_itinerary = await generate_smart_itinerary(
+                    single_city, days_per_city, budget // len(city_list), 
+                    preference, people, **extra_params
+                )
+                for day in city_itinerary.get("days", []):
+                    day["city"] = single_city
+                    day["day"] = len(all_itineraries) + 1
+                    all_itineraries.append(day)
+            except Exception as e:
+                pass
+        
+        result_itinerary = {
+            "days": all_itineraries,
+            "total_cost_estimate": budget,
+            "summary": f"多城市行程：{' → '.join(city_list)}",
+            "tips": [
+                "注意城市间交通安排",
+                "建议提前预订高铁票",
+                "每个城市预留足够时间游玩"
+            ]
+        }
+        
+        return {
+            "success": True, 
+            "city": ", ".join(city_list), 
+            "cities": city_list,
+            "days": days, 
+            "budget": budget, 
+            "itinerary": result_itinerary
+        }
 
 
 @router.post("/generate-multiple", summary="生成多版本行程")

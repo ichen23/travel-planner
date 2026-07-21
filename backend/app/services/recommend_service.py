@@ -58,6 +58,29 @@ async def recommend_destinations(from_city: str, travel_date: str,
     
     from app.services.beijing_3hr_data import BEIJING_3HR_COORDS
     
+    static_recommendations = {
+        "北京": {"attractions": ["故宫博物院", "八达岭长城", "颐和园", "天坛公园", "天安门广场"], "food": ["北京烤鸭", "炸酱面", "涮羊肉", "豆汁焦圈"]},
+        "上海": {"attractions": ["外滩", "东方明珠", "豫园", "迪士尼乐园", "南京路"], "food": ["小笼包", "生煎", "蟹粉豆腐", "本帮红烧肉"]},
+        "广州": {"attractions": ["广州塔", "白云山", "陈家祠", "长隆欢乐世界", "沙面"], "food": ["早茶", "烧腊", "肠粉", "双皮奶"]},
+        "成都": {"attractions": ["宽窄巷子", "锦里", "都江堰", "大熊猫繁育研究基地", "武侯祠"], "food": ["火锅", "串串香", "川菜", "钟水饺"]},
+        "杭州": {"attractions": ["西湖", "灵隐寺", "千岛湖", "宋城", "西溪湿地"], "food": ["龙井虾仁", "东坡肉", "叫花鸡", "片儿川"]},
+        "西安": {"attractions": ["兵马俑", "大雁塔", "回民街", "华清池", "城墙"], "food": ["肉夹馍", "羊肉泡馍", "凉皮", "biangbiang面"]},
+        "重庆": {"attractions": ["洪崖洞", "解放碑", "武隆天生三桥", "磁器口", "长江索道"], "food": ["火锅", "小面", "酸辣粉", "毛血旺"]},
+        "南京": {"attractions": ["中山陵", "夫子庙", "玄武湖", "总统府", "明孝陵"], "food": ["盐水鸭", "鸭血粉丝汤", "小笼包", "狮子头"]},
+        "武汉": {"attractions": ["黄鹤楼", "东湖", "户部巷", "武汉大学", "长江大桥"], "food": ["热干面", "鸭脖", "三鲜豆皮", "糊汤粉"]},
+        "厦门": {"attractions": ["鼓浪屿", "南普陀寺", "厦门大学", "中山路", "曾厝垵"], "food": ["沙茶面", "土笋冻", "海蛎煎", "花生汤"]},
+        "苏州": {"attractions": ["拙政园", "留园", "虎丘", "周庄", "金鸡湖"], "food": ["松鼠桂鱼", "阳澄湖大闸蟹", "响油鳝糊", "苏式糕点"]},
+        "青岛": {"attractions": ["栈桥", "八大关", "崂山", "金沙滩", "五四广场"], "food": ["海鲜", "青岛啤酒", "锅贴", "鲅鱼水饺"]},
+        "长沙": {"attractions": ["岳麓山", "橘子洲", "张家界", "凤凰古城", "湖南省博物馆"], "food": ["臭豆腐", "剁椒鱼头", "糖油粑粑", "口味虾"]},
+        "天津": {"attractions": ["五大道", "古文化街", "意大利风情区", "塘沽", "独乐寺"], "food": ["狗不理包子", "煎饼果子", "麻花", "锅巴菜"]},
+        "大理": {"attractions": ["洱海", "苍山", "大理古城", "双廊", "喜洲"], "food": ["白族烤鱼", "乳扇", "饵丝", "砂锅鱼"]},
+        "丽江": {"attractions": ["丽江古城", "玉龙雪山", "束河古镇", "蓝月谷", "泸沽湖"], "food": ["纳西烤鱼", "腊排骨火锅", "鸡豆凉粉", "丽江粑粑"]},
+        "桂林": {"attractions": ["漓江", "阳朔", "龙脊梯田", "象鼻山", "遇龙河"], "food": ["桂林米粉", "啤酒鱼", "荔浦芋扣肉", "田螺酿"]},
+        "三亚": {"attractions": ["亚龙湾", "天涯海角", "蜈支洲岛", "南山", "大东海"], "food": ["海鲜大餐", "椰子鸡", "清补凉", "和乐蟹"]},
+        "深圳": {"attractions": ["世界之窗", "欢乐谷", "大小梅沙", "莲花山", "东部华侨城"], "food": ["潮汕牛肉火锅", "客家菜", "肠粉", "烧鹅"]},
+        "郑州": {"attractions": ["少林寺", "黄河风景名胜区", "二七纪念塔", "清明上河园", "龙门石窟"], "food": ["烩面", "胡辣汤", "道口烧鸡", "灌汤包"]},
+    }
+    
     for rec in recommendations:
         rec["source"] = "database"
         if rec["city"] in CITY_COORDS:
@@ -74,7 +97,16 @@ async def recommend_destinations(from_city: str, travel_date: str,
         rec["description"] = city_info.get("description", f"{rec['city']}是中国一座具有独特魅力的城市")
         rec["avg_daily_budget"] = city_info.get("avg_daily_budget", 400)
         rec["highlights"] = city_info.get("highlights", "")
-        rec["tips"] = {"attractions": [], "food": []}
+        
+        static_data = static_recommendations.get(rec["city"], {
+            "attractions": [f"{rec['city']}著名景点", f"{rec['city']}特色街区", f"{rec['city']}文化遗址"],
+            "food": [f"{rec['city']}特色美食", f"{rec['city']}传统小吃"]
+        })
+        
+        rec["tips"] = {
+            "attractions": [{"name": a, "address": ""} for a in static_data["attractions"]],
+            "food": [{"name": f, "address": ""} for f in static_data["food"]]
+        }
 
     return recommendations
 

@@ -99,17 +99,21 @@ export default function PlannerPage() {
   const [copyStyleModalOpen, setCopyStyleModalOpen] = useState(false)
   const [selectedCopyStyle, setSelectedCopyStyle] = useState('')
 
-  const [formData, setFormData] = useState({
-    city: params.get('city') || '',
-    fromCity: params.get('from') || '',
-    days: 3,
-    budget: 3000,
-    preference: 'all',
-    travelers: 2,
-    crowdTypes: [],
-    foodPrefs: [],
-    hotelPrefs: [],
-    transportPrefs: [],
+  const [formData, setFormData] = useState(() => {
+    const citiesParam = params.get('cities')
+    const cityParam = params.get('city')
+    return {
+      city: citiesParam ? decodeURIComponent(citiesParam).split(',').join(', ') : (cityParam || ''),
+      fromCity: params.get('from') || '',
+      days: parseInt(params.get('days')) || 3,
+      budget: 3000,
+      preference: 'all',
+      travelers: 2,
+      crowdTypes: [],
+      foodPrefs: [],
+      hotelPrefs: [],
+      transportPrefs: [],
+    }
   })
 
   const schedule = usePlannerStore(s => s.schedule)
