@@ -810,3 +810,25 @@ def get_city_all_attractions(city: str) -> list:
 
 def get_city_all_food(city: str) -> list:
     return get_city_food(city)
+
+
+def generate_city_data(city: str) -> dict:
+    city_info = get_city_info_data(city)
+    
+    if not city_info:
+        return None
+    
+    basic_info = city_info.get("basic_info", {})
+    attractions = city_info.get("attractions", [])
+    food = city_info.get("food", [])
+    
+    return {
+        "name": city,
+        "basic_info": basic_info,
+        "attractions": attractions,
+        "food": food,
+        "transport": city_info.get("transport", ""),
+        "tips": city_info.get("tips", ""),
+        "recommended_days": basic_info.get("recommended_days", 2),
+        "best_season": basic_info.get("best_season", "")
+    }
