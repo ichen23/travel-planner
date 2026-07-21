@@ -375,6 +375,157 @@ CITY_STATIC_DATA = {
         ],
         "transport": "地铁1-16号线，公交发达",
         "tips": "故宫、长城建议提前预约；天安门需安检；颐和园和圆明园可一起游览"
+    },
+    "上海": {
+        "attractions": [
+            {"name": "外滩", "start_time": "17:00", "duration_hours": 2, "best_period": "evening", "ticket": "免费", "rating": 5, "tags": ["夜景", "地标"], "tips": "上海地标，晚上灯光最美"},
+            {"name": "东方明珠", "start_time": "10:00", "duration_hours": 3, "best_period": "morning", "ticket": "160元", "rating": 5, "tags": ["地标", "必去"], "tips": "上海标志建筑，可俯瞰全城"},
+            {"name": "豫园", "start_time": "09:00", "duration_hours": 2, "best_period": "morning", "ticket": "40元", "rating": 4, "tags": ["园林", "古街"], "tips": "江南古典园林，城隍庙紧邻"},
+            {"name": "上海博物馆", "start_time": "09:00", "duration_hours": 4, "best_period": "morning", "ticket": "免费（需预约）", "rating": 5, "tags": ["文化", "必去"], "tips": "中国四大博物馆之一"},
+            {"name": "南京路", "start_time": "14:00", "duration_hours": 3, "best_period": "afternoon", "ticket": "免费", "rating": 4, "tags": ["购物", "地标"], "tips": "中华商业第一街"},
+            {"name": "迪士尼乐园", "start_time": "09:00", "duration_hours": 8, "best_period": "day", "ticket": "475元", "rating": 5, "tags": ["主题", "必去"], "tips": "中国首座迪士尼，建议一整天"},
+            {"name": "田子坊", "start_time": "13:00", "duration_hours": 2, "best_period": "afternoon", "ticket": "免费", "rating": 4, "tags": ["文艺", "打卡"], "tips": "老弄堂改造的艺术区"},
+            {"name": "朱家角", "start_time": "08:00", "duration_hours": 6, "best_period": "day", "ticket": "60元", "rating": 4, "tags": ["古镇", "江南"], "tips": "上海水乡古镇，可一日游"}
+        ],
+        "food": [
+            {"name": "小杨生煎", "location": "多家分店", "price_range": "30-60元", "recommend": "鲜肉生煎、蟹粉生煎", "type": "特色"},
+            {"name": "南翔馒头店", "location": "豫园", "price_range": "50-100元", "recommend": "小笼包、蟹粉小笼", "type": "特色"},
+            {"name": "本帮红烧肉", "location": "上海老饭店", "price_range": "80-150元", "recommend": "红烧肉、响油鳝糊", "type": "本帮菜"},
+            {"name": "鲜肉月饼", "location": "光明邨", "price_range": "10-20元", "recommend": "鲜肉月饼、榨菜鲜肉", "type": "小吃"}
+        ],
+        "transport": "地铁1-18号线，公交发达",
+        "tips": "外滩晚上灯光最美；博物馆周一闭馆；迪士尼建议一整天游玩"
+    },
+    "天津": {
+        "attractions": [
+            {"name": "古文化街", "start_time": "09:00", "duration_hours": 2, "best_period": "morning", "ticket": "免费", "rating": 4, "tags": ["古街", "文化"], "tips": "天津民俗文化街"},
+            {"name": "天津之眼", "start_time": "18:00", "duration_hours": 1, "best_period": "evening", "ticket": "170元", "rating": 5, "tags": ["地标", "夜景"], "tips": "世界最大摩天轮，夜景最美"},
+            {"name": "意大利风情区", "start_time": "14:00", "duration_hours": 2, "best_period": "afternoon", "ticket": "免费", "rating": 4, "tags": ["建筑", "拍照"], "tips": "欧洲风情建筑群"},
+            {"name": "瓷房子", "start_time": "10:00", "duration_hours": 1, "best_period": "morning", "ticket": "50元", "rating": 4, "tags": ["打卡", "建筑"], "tips": "瓷器装饰的特色建筑"},
+            {"name": "五大道", "start_time": "09:00", "duration_hours": 3, "best_period": "morning", "ticket": "免费", "rating": 4, "tags": ["建筑", "骑行"], "tips": "租界建筑区，可骑行游览"},
+            {"name": "大沽口炮台", "start_time": "08:00", "duration_hours": 4, "best_period": "morning", "ticket": "30元", "rating": 4, "tags": ["历史", "海边"], "tips": "鸦片战争遗址，海边风景"},
+            {"name": "盘山", "start_time": "07:00", "duration_hours": 6, "best_period": "morning", "ticket": "100元", "rating": 4, "tags": ["自然", "登山"], "tips": "京东第一山，可一日游"}
+        ],
+        "food": [
+            {"name": "狗不理包子", "location": "多家分店", "price_range": "50-100元", "recommend": "猪肉包、三鲜包", "type": "特色"},
+            {"name": "煎饼果子", "location": "街边摊", "price_range": "10-20元", "recommend": "绿豆面煎饼、鸡蛋", "type": "小吃"},
+            {"name": "耳朵眼炸糕", "location": "多家分店", "price_range": "10-20元", "recommend": "红豆馅、豆沙馅", "type": "小吃"},
+            {"name": "水爆肚", "location": "天津老菜馆", "price_range": "30-60元", "recommend": "水爆肚、红烧牛尾", "type": "特色"}
+        ],
+        "transport": "地铁1-5号线，公交发达",
+        "tips": "天津之眼晚上最美；煎饼果子配豆浆是天津早餐；五大道可以骑行"
+    },
+    "苏州": {
+        "attractions": [
+            {"name": "拙政园", "start_time": "08:30", "duration_hours": 2, "best_period": "morning", "ticket": "90元", "rating": 5, "tags": ["园林", "必去"], "tips": "中国四大园林之首"},
+            {"name": "狮子林", "start_time": "10:30", "duration_hours": 1.5, "best_period": "morning", "ticket": "40元", "rating": 4, "tags": ["园林", "假山"], "tips": "以假山闻名的园林"},
+            {"name": "虎丘", "start_time": "08:00", "duration_hours": 3, "best_period": "morning", "ticket": "80元", "rating": 5, "tags": ["历史", "必去"], "tips": "吴中第一名胜"},
+            {"name": "周庄古镇", "start_time": "07:00", "duration_hours": 6, "best_period": "day", "ticket": "100元", "rating": 5, "tags": ["古镇", "江南"], "tips": "中国第一水乡，可一日游"},
+            {"name": "同里古镇", "start_time": "07:30", "duration_hours": 6, "best_period": "day", "ticket": "100元", "rating": 4, "tags": ["古镇", "江南"], "tips": "小桥流水人家"},
+            {"name": "平江路", "start_time": "14:00", "duration_hours": 2, "best_period": "afternoon", "ticket": "免费", "rating": 4, "tags": ["古街", "美食"], "tips": "苏州历史街区"},
+            {"name": "金鸡湖", "start_time": "16:00", "duration_hours": 2, "best_period": "evening", "ticket": "免费", "rating": 4, "tags": ["夜景", "现代"], "tips": "苏州工业园区地标，夜景好美"},
+            {"name": "寒山寺", "start_time": "15:00", "duration_hours": 1.5, "best_period": "afternoon", "ticket": "20元", "rating": 4, "tags": ["寺庙", "文化"], "tips": "枫桥夜泊诗中寺庙"}
+        ],
+        "food": [
+            {"name": "松鹤楼", "location": "观前街", "price_range": "100-200元", "recommend": "松鼠桂鱼、蟹粉豆腐", "type": "苏帮菜"},
+            {"name": "哑巴生煎", "location": "临顿路", "price_range": "30-50元", "recommend": "鲜肉生煎", "type": "特色"},
+            {"name": "奥灶面", "location": "多家分店", "price_range": "20-30元", "recommend": "红油爆鱼面、卤鸭面", "type": "面食"},
+            {"name": "采芝斋", "location": "观前街", "price_range": "20-50元", "recommend": "粽子糖、薄荷糖", "type": "特产"}
+        ],
+        "transport": "地铁1-4号线，公交发达",
+        "tips": "拙政园和狮子林可一起游览；古镇建议早去避人流；苏帮菜偏甜"
+    },
+    "武汉": {
+        "attractions": [
+            {"name": "黄鹤楼", "start_time": "08:30", "duration_hours": 2, "best_period": "morning", "ticket": "70元", "rating": 5, "tags": ["地标", "必去"], "tips": "江南三大名楼之一"},
+            {"name": "东湖", "start_time": "09:00", "duration_hours": 4, "best_period": "day", "ticket": "免费", "rating": 5, "tags": ["自然", "骑行"], "tips": "武汉城中湖，可骑行或划船"},
+            {"name": "户部巷", "start_time": "14:00", "duration_hours": 2, "best_period": "afternoon", "ticket": "免费", "rating": 4, "tags": ["美食", "古街"], "tips": "武汉小吃街"},
+            {"name": "湖北省博物馆", "start_time": "09:00", "duration_hours": 3, "best_period": "morning", "ticket": "免费（需预约）", "rating": 5, "tags": ["文化", "必去"], "tips": "越王勾践剑、曾侯乙编钟"},
+            {"name": "江滩", "start_time": "16:00", "duration_hours": 2, "best_period": "evening", "ticket": "免费", "rating": 4, "tags": ["夜景", "散步"], "tips": "长江岸边，夜景好美"},
+            {"name": "武汉大学", "start_time": "09:00", "duration_hours": 2, "best_period": "morning", "ticket": "免费", "rating": 4, "tags": ["名校", "樱花"], "tips": "樱花大道，春季最美"},
+            {"name": "黄鹤楼", "start_time": "08:30", "duration_hours": 2, "best_period": "morning", "ticket": "70元", "rating": 5, "tags": ["地标", "必去"], "tips": "江南三大名楼之一"}
+        ],
+        "food": [
+            {"name": "热干面", "location": "街边店", "price_range": "10-20元", "recommend": "芝麻酱热干面", "type": "早餐"},
+            {"name": "武昌鱼", "location": "艳阳天", "price_range": "60-120元", "recommend": "清蒸武昌鱼、红烧排骨", "type": "鄂菜"},
+            {"name": "小龙虾", "location": "万松园", "price_range": "100-200元", "recommend": "油焖大虾、蒜蓉小龙虾", "type": "特色"},
+            {"name": "面窝", "location": "街边摊", "price_range": "5-10元", "recommend": "面窝、糯米鸡", "type": "小吃"}
+        ],
+        "transport": "地铁1-8号线，公交发达",
+        "tips": "东湖可以骑行；樱花季武大很美；小龙虾夏季最美味"
+    },
+    "长沙": {
+        "attractions": [
+            {"name": "岳麓书院", "start_time": "08:30", "duration_hours": 3, "best_period": "morning", "ticket": "50元", "rating": 5, "tags": ["文化", "必去"], "tips": "千年学府，岳麓山下"},
+            {"name": "橘子洲头", "start_time": "09:00", "duration_hours": 4, "best_period": "day", "ticket": "免费", "rating": 5, "tags": ["地标", "必去"], "tips": "湘江中央，可坐小火车"},
+            {"name": "太平街", "start_time": "14:00", "duration_hours": 2, "best_period": "afternoon", "ticket": "免费", "rating": 4, "tags": ["美食", "古街"], "tips": "长沙小吃街"},
+            {"name": "湖南省博物馆", "start_time": "09:00", "duration_hours": 4, "best_period": "morning", "ticket": "免费（需预约）", "rating": 5, "tags": ["文化", "必去"], "tips": "马王堆汉墓陈列"},
+            {"name": "坡子街", "start_time": "15:00", "duration_hours": 2, "best_period": "afternoon", "ticket": "免费", "rating": 4, "tags": ["美食", "商圈"], "tips": "火宫殿在这边"},
+            {"name": "黑麋峰", "start_time": "07:00", "duration_hours": 6, "best_period": "day", "ticket": "60元", "rating": 4, "tags": ["自然", "登山"], "tips": "长沙近郊最高峰"},
+            {"name": "世界之窗", "start_time": "09:00", "duration_hours": 6, "best_period": "day", "ticket": "150元", "rating": 4, "tags": ["主题", "亲子"], "tips": "主题乐园，老少皆宜"}
+        ],
+        "food": [
+            {"name": "火宫殿", "location": "坡子街", "price_range": "60-120元", "recommend": "臭豆腐、糖油粑粑、口味虾", "type": "小吃"},
+            {"name": "文和友", "location": "海信广场", "price_range": "80-150元", "recommend": "油爆虾、口味蟹", "type": "湘菜馆"},
+            {"name": "茶颜悦色", "location": "多家分店", "price_range": "15-25元", "recommend": "幽兰拿铁、声声乌龙", "type": "奶茶"},
+            {"name": "剁椒鱼头", "location": "辣椒炒肉", "price_range": "80-150元", "recommend": "剁椒鱼头、小炒黄牛肉", "type": "湘菜"}
+        ],
+        "transport": "地铁1-6号线，公交发达",
+        "tips": "臭豆腐、小龙虾必吃；茶颜悦色到处都有；岳麓书院在湖南大学内"
+    },
+    "福州": {
+        "attractions": [
+            {"name": "三坊七巷", "start_time": "09:00", "duration_hours": 3, "best_period": "morning", "ticket": "免费", "rating": 5, "tags": ["古街", "文化"], "tips": "福州历史文化街区"},
+            {"name": "鼓山", "start_time": "07:00", "duration_hours": 5, "best_period": "morning", "ticket": "40元", "rating": 4, "tags": ["自然", "登山"], "tips": "福州名山，可看日出"},
+            {"name": "西湖公园", "start_time": "08:00", "duration_hours": 2, "best_period": "morning", "ticket": "免费", "rating": 4, "tags": ["自然", "散步"], "tips": "福州城中湖"},
+            {"name": "青云山", "start_time": "07:00", "duration_hours": 8, "best_period": "day", "ticket": "130元", "rating": 4, "tags": ["自然", "一日游"], "tips": "福州近郊景区，可一日游"},
+            {"name": "平潭岛", "start_time": "07:00", "duration_hours": 8, "best_period": "day", "ticket": "免费", "rating": 5, "tags": ["海边", "一日游"], "tips": "福建最美海岛"},
+            {"name": "林则徐故居", "start_time": "10:00", "duration_hours": 1.5, "best_period": "morning", "ticket": "20元", "rating": 4, "tags": ["历史", "文化"], "tips": "民族英雄林则徐故居"}
+        ],
+        "food": [
+            {"name": "聚春园", "location": "东街口", "price_range": "100-200元", "recommend": "佛跳墙、荔枝肉", "type": "闽菜"},
+            {"name": "鱼丸", "location": "街边店", "price_range": "15-30元", "recommend": "鲨鱼丸、鳗鱼丸", "type": "小吃"},
+            {"name": "同利肉燕", "location": "三坊七巷", "price_range": "20-40元", "recommend": "肉燕、燕皮", "type": "特色"},
+            {"name": "锅边糊", "location": "街边摊", "price_range": "5-15元", "recommend": "锅边糊、油条", "type": "早餐"}
+        ],
+        "transport": "地铁1-2号线，公交发达",
+        "tips": "三坊七巷晚上有灯光；平潭岛可看蓝眼泪；佛跳墙是闽菜代表"
+    },
+    "合肥": {
+        "attractions": [
+            {"name": "包公园", "start_time": "08:30", "duration_hours": 2, "best_period": "morning", "ticket": "20元", "rating": 4, "tags": ["历史", "公园"], "tips": "包公祠、包公墓园"},
+            {"name": "三河古镇", "start_time": "07:30", "duration_hours": 6, "best_period": "day", "ticket": "免费", "rating": 4, "tags": ["古镇", "一日游"], "tips": "合肥近郊古镇"},
+            {"name": "李鸿章故居", "start_time": "10:00", "duration_hours": 1.5, "best_period": "morning", "ticket": "25元", "rating": 4, "tags": ["历史", "文化"], "tips": "晚清重臣李鸿章故居"},
+            {"name": "巢湖", "start_time": "07:00", "duration_hours": 8, "best_period": "day", "ticket": "免费", "rating": 4, "tags": ["自然", "一日游"], "tips": "中国五大淡水湖之一"},
+            {"name": "岱山湖", "start_time": "07:30", "duration_hours": 8, "best_period": "day", "ticket": "40元", "rating": 4, "tags": ["自然", "一日游"], "tips": "合肥近郊山水景区"},
+            {"name": "合肥海洋世界", "start_time": "09:00", "duration_hours": 4, "best_period": "day", "ticket": "150元", "rating": 4, "tags": ["亲子", "主题"], "tips": "海洋主题乐园"}
+        ],
+        "food": [
+            {"name": "同庆楼", "location": "多家分店", "price_range": "100-200元", "recommend": "臭鳜鱼、毛豆腐", "type": "徽菜"},
+            {"name": "老乡鸡", "location": "多家分店", "price_range": "20-40元", "recommend": "肥西老母鸡汤", "type": "快餐"},
+            {"name": "肥东老母鸡", "location": "肥东", "price_range": "30-60元", "recommend": "老母鸡汤", "type": "特色"},
+            {"name": "庐州烤鸭", "location": "宿州路", "price_range": "50-100元", "recommend": "烤鸭、鸭油烧饼", "type": "特色"}
+        ],
+        "transport": "地铁1-4号线，公交发达",
+        "tips": "三河古镇免费；巢湖可一日游；臭鳜鱼是徽菜代表"
+    },
+    "南昌": {
+        "attractions": [
+            {"name": "滕王阁", "start_time": "08:30", "duration_hours": 2, "best_period": "morning", "ticket": "50元", "rating": 5, "tags": ["地标", "必去"], "tips": "江南三大名楼之一"},
+            {"name": "八一起义纪念馆", "start_time": "09:00", "duration_hours": 2, "best_period": "morning", "ticket": "免费（需预约）", "rating": 4, "tags": ["历史", "红色"], "tips": "南昌起义旧址"},
+            {"name": "梅岭", "start_time": "07:00", "duration_hours": 6, "best_period": "day", "ticket": "45元", "rating": 4, "tags": ["自然", "登山"], "tips": "南昌近郊名山"},
+            {"name": "秋水广场", "start_time": "18:00", "duration_hours": 2, "best_period": "evening", "ticket": "免费", "rating": 4, "tags": ["夜景", "音乐喷泉"], "tips": "有音乐喷泉表演"},
+            {"name": "绳金塔", "start_time": "10:00", "duration_hours": 1, "best_period": "morning", "ticket": "20元", "rating": 4, "tags": ["历史", "地标"], "tips": "南昌古塔"},
+            {"name": "天香园", "start_time": "09:00", "duration_hours": 3, "best_period": "morning", "ticket": "50元", "rating": 4, "tags": ["自然", "观鸟"], "tips": "城市湿地，可看候鸟"}
+        ],
+        "food": [
+            {"name": "民间饭庄", "location": "榕门路", "price_range": "80-150元", "recommend": "瓦罐汤、三杯鸡", "type": "赣菜"},
+            {"name": "绳金塔夜市", "location": "绳金塔", "price_range": "20-50元", "recommend": "烤串、炒粉", "type": "小吃"},
+            {"name": "黄庆仁药店", "location": "多家分店", "price_range": "15-30元", "recommend": "绿豆汤、龟苓膏", "type": "特色"},
+            {"name": "南昌炒粉", "location": "街边店", "price_range": "10-20元", "recommend": "牛肉炒粉、鸡蛋炒粉", "type": "面食"}
+        ],
+        "transport": "地铁1-4号线，公交发达",
+        "tips": "秋水广场有音乐喷泉；瓦罐汤是南昌特色；滕王阁晚上有灯光"
     }
 }
 
@@ -786,98 +937,107 @@ async def generate_multi_city_itinerary(cities: list, day_allocation: list,
                                          total_days: int, budget: float, 
                                          preference: str = "",
                                          user_attractions: dict = None) -> dict:
-    if len(cities) < 2:
-        return {"success": False, "message": "至少需要2个城市"}
-    
-    if sum(day_allocation) != total_days:
-        if sum(day_allocation) > 0:
-            total_days = sum(day_allocation)
-        else:
-            day_allocation = [total_days // len(cities)] * len(cities)
-            day_allocation[0] += total_days % len(cities)
-    
-    user_attractions = user_attractions or {}
-    budget_per_day = budget / total_days if total_days > 0 else budget
-    
-    days_schedule = []
-    transfer_segments = []
-    day_counter = 1
-    city_budgets = {}
-    last_day_index_by_city = {}
-    
-    for i, city in enumerate(cities):
-        city_days = day_allocation[i]
+    try:
+        if len(cities) < 2:
+            return {"success": False, "message": "至少需要2个城市"}
         
-        user_selected = user_attractions.get(city, [])
+        if sum(day_allocation) != total_days:
+            if sum(day_allocation) > 0:
+                total_days = sum(day_allocation)
+            else:
+                day_allocation = [total_days // len(cities)] * len(cities)
+                day_allocation[0] += total_days % len(cities)
         
-        city_attractions = get_city_attractions(city)
-        city_budget = estimate_city_budget(city, city_days, budget_per_day, city_attractions)
-        city_budgets[city] = city_budget
+        user_attractions = user_attractions or {}
+        budget_per_day = budget / total_days if total_days > 0 else budget
         
-        for d in range(city_days):
-            day_user_selected = user_selected if d == 0 else []
+        days_schedule = []
+        transfer_segments = []
+        day_counter = 1
+        city_budgets = {}
+        last_day_index_by_city = {}
+        
+        for i, city in enumerate(cities):
+            city_days = day_allocation[i]
             
-            day_plan = generate_full_day_plan(city, day_counter, day_user_selected)
-            if day_plan:
-                days_schedule.append(day_plan)
-                day_counter += 1
-                last_day_index_by_city[city] = len(days_schedule) - 1
-    
-    for i in range(len(cities) - 1):
-        from_city = cities[i]
-        to_city = cities[i + 1]
+            user_selected = user_attractions.get(city, [])
+            
+            city_attractions = get_city_attractions(city)
+            city_budget = estimate_city_budget(city, city_days, budget_per_day, city_attractions)
+            city_budgets[city] = city_budget
+            
+            for d in range(city_days):
+                day_user_selected = user_selected if d == 0 else []
+                
+                day_plan = generate_full_day_plan(city, day_counter, day_user_selected)
+                if day_plan:
+                    days_schedule.append(day_plan)
+                    day_counter += 1
+                    last_day_index_by_city[city] = len(days_schedule) - 1
         
-        train_info = get_train_info(from_city, to_city)
+        for i in range(len(cities) - 1):
+            from_city = cities[i]
+            to_city = cities[i + 1]
+            
+            train_info = get_train_info(from_city, to_city)
+            
+            transfer_segment = {
+                "from_city": from_city,
+                "to_city": to_city,
+                "train_number": train_info.get("train_number", "未知"),
+                "train_type": train_info.get("type", "G"),
+                "train_type_name": train_info.get("type_name", "高铁"),
+                "departure": "19:00",
+                "arrival": calculate_arrival_time("19:00", train_info.get("duration_min", 120)),
+                "duration": train_info.get("duration_text", "2小时"),
+                "duration_minutes": train_info.get("duration_min", 120),
+                "price": train_info.get("price", 100),
+                "icon": "🚄"
+            }
+            transfer_segments.append(transfer_segment)
+            
+            last_idx = last_day_index_by_city.get(from_city)
+            if last_idx is not None and last_idx < len(days_schedule):
+                add_transfer_to_day(days_schedule[last_idx], from_city, to_city, transfer_segment)
         
-        transfer_segment = {
-            "from_city": from_city,
-            "to_city": to_city,
-            "train_number": train_info["train_number"],
-            "train_type": train_info["type"],
-            "train_type_name": train_info["type_name"],
-            "departure": "19:00",
-            "arrival": calculate_arrival_time("19:00", train_info["duration_min"]),
-            "duration": train_info["duration_text"],
-            "duration_minutes": train_info["duration_min"],
-            "price": train_info["price"],
-            "icon": "🚄"
+        total_transfer_cost = sum(t.get("price", 0) for t in transfer_segments)
+        total_ticket_cost = sum(b.get("ticket", 0) for b in city_budgets.values())
+        
+        return {
+            "success": True,
+            "cities": cities,
+            "day_allocation": day_allocation,
+            "total_days": total_days,
+            "total_budget": budget,
+            "budget_breakdown": {
+                "accommodation": round(budget * 0.3),
+                "food": round(budget * 0.25),
+                "transport": round(budget * 0.2) + total_transfer_cost,
+                "tickets": total_ticket_cost,
+                "other": round(budget * 0.1)
+            },
+            "city_budgets": city_budgets,
+            "transfer_segments": transfer_segments,
+            "days": days_schedule,
+            "tips": [
+                "提前7-14天预订高铁票可享受优惠",
+                "建议每天8:00开始行程，晚上21:00左右结束",
+                "携带舒适的鞋子，每天步行较多",
+                "准备充电宝，随时拍照记录",
+                "关注天气预报，合理安排室内外景点",
+                "每个城市推荐1-2个必去景点，不要贪多"
+            ],
+            "packing_list": get_packing_suggestions(cities),
+            "generated_at": datetime.now().isoformat()
         }
-        transfer_segments.append(transfer_segment)
-        
-        last_idx = last_day_index_by_city[from_city]
-        if last_idx is not None:
-            add_transfer_to_day(days_schedule[last_idx], from_city, to_city, transfer_segment)
-    
-    total_transfer_cost = sum(t["price"] for t in transfer_segments)
-    total_ticket_cost = sum(b.get("ticket", 0) for b in city_budgets.values())
-    
-    return {
-        "success": True,
-        "cities": cities,
-        "day_allocation": day_allocation,
-        "total_days": total_days,
-        "total_budget": budget,
-        "budget_breakdown": {
-            "accommodation": round(budget * 0.3),
-            "food": round(budget * 0.25),
-            "transport": round(budget * 0.2) + total_transfer_cost,
-            "tickets": total_ticket_cost,
-            "other": round(budget * 0.1)
-        },
-        "city_budgets": city_budgets,
-        "transfer_segments": transfer_segments,
-        "days": days_schedule,
-        "tips": [
-            "提前7-14天预订高铁票可享受优惠",
-            "建议每天8:00开始行程，晚上21:00左右结束",
-            "携带舒适的鞋子，每天步行较多",
-            "准备充电宝，随时拍照记录",
-            "关注天气预报，合理安排室内外景点",
-            "每个城市推荐1-2个必去景点，不要贪多"
-        ],
-        "packing_list": get_packing_suggestions(cities),
-        "generated_at": datetime.now().isoformat()
-    }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "message": f"生成行程失败: {str(e)}",
+            "error": str(e)
+        }
 
 
 def calculate_arrival_time(departure_time: str, duration_minutes: int) -> str:
