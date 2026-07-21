@@ -1,0 +1,164 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from app.services.real_city_data import REAL_CITY_DATA
+
+NEW_DATA = {
+    "西宁市": {"name": "西宁市", "province": "青海省", "lng": 101.7782, "lat": 36.6232, "type": "地级市", "parent": "青海省"},
+    "城东区": {"name": "城东区", "province": "青海省", "lng": 101.8170, "lat": 36.6170, "type": "市辖区", "parent": "西宁市"},
+    "城中区": {"name": "城中区", "province": "青海省", "lng": 101.7670, "lat": 36.6170, "type": "市辖区", "parent": "西宁市"},
+    "城西区": {"name": "城西区", "province": "青海省", "lng": 101.7670, "lat": 36.6330, "type": "市辖区", "parent": "西宁市"},
+    "城北区": {"name": "城北区", "province": "青海省", "lng": 101.7670, "lat": 36.6500, "type": "市辖区", "parent": "西宁市"},
+    "海东市": {"name": "海东市", "province": "青海省", "lng": 102.1670, "lat": 36.5170, "type": "地级市", "parent": "青海省"},
+    "玉树市": {"name": "玉树市", "province": "青海省", "lng": 96.9830, "lat": 33.0170, "type": "县级市", "parent": "玉树藏族自治州"},
+    "格尔木市": {"name": "格尔木市", "province": "青海省", "lng": 94.9000, "lat": 36.4170, "type": "县级市", "parent": "海西蒙古族藏族自治州"},
+    "德令哈市": {"name": "德令哈市", "province": "青海省", "lng": 97.3830, "lat": 37.3830, "type": "县级市", "parent": "海西蒙古族藏族自治州"},
+    "银川市": {"name": "银川市", "province": "宁夏回族自治区", "lng": 106.2309, "lat": 38.4872, "type": "地级市", "parent": "宁夏回族自治区"},
+    "石嘴山市": {"name": "石嘴山市", "province": "宁夏回族自治区", "lng": 106.3780, "lat": 39.0130, "type": "地级市", "parent": "宁夏回族自治区"},
+    "吴忠市": {"name": "吴忠市", "province": "宁夏回族自治区", "lng": 106.1950, "lat": 37.9860, "type": "地级市", "parent": "宁夏回族自治区"},
+    "固原市": {"name": "固原市", "province": "宁夏回族自治区", "lng": 106.2420, "lat": 36.0150, "type": "地级市", "parent": "宁夏回族自治区"},
+    "中卫市": {"name": "中卫市", "province": "宁夏回族自治区", "lng": 105.1960, "lat": 37.5150, "type": "地级市", "parent": "宁夏回族自治区"},
+    "遵义市": {"name": "遵义市", "province": "贵州省", "lng": 106.9273, "lat": 27.7254, "type": "地级市", "parent": "贵州省"},
+    "六盘水市": {"name": "六盘水市", "province": "贵州省", "lng": 104.8330, "lat": 26.5830, "type": "地级市", "parent": "贵州省"},
+    "安顺市": {"name": "安顺市", "province": "贵州省", "lng": 105.9330, "lat": 26.2500, "type": "地级市", "parent": "贵州省"},
+    "拉萨市": {"name": "拉萨市", "province": "西藏自治区", "lng": 91.1322, "lat": 29.6500, "type": "地级市", "parent": "西藏自治区"},
+    "日喀则市": {"name": "日喀则市", "province": "西藏自治区", "lng": 88.8809, "lat": 29.2671, "type": "地级市", "parent": "西藏自治区"},
+    "昌都市": {"name": "昌都市", "province": "西藏自治区", "lng": 97.1787, "lat": 31.1369, "type": "地级市", "parent": "西藏自治区"},
+    "林芝市": {"name": "林芝市", "province": "西藏自治区", "lng": 94.3624, "lat": 29.6486, "type": "地级市", "parent": "西藏自治区"},
+    "山南市": {"name": "山南市", "province": "西藏自治区", "lng": 91.7730, "lat": 29.2360, "type": "地级市", "parent": "西藏自治区"},
+    "那曲市": {"name": "那曲市", "province": "西藏自治区", "lng": 92.0580, "lat": 31.4760, "type": "地级市", "parent": "西藏自治区"},
+    "乌鲁木齐市": {"name": "乌鲁木齐市", "province": "新疆维吾尔自治区", "lng": 87.6168, "lat": 43.8256, "type": "地级市", "parent": "新疆维吾尔自治区"},
+    "克拉玛依市": {"name": "克拉玛依市", "province": "新疆维吾尔自治区", "lng": 84.8745, "lat": 45.5950, "type": "地级市", "parent": "新疆维吾尔自治区"},
+    "吐鲁番市": {"name": "吐鲁番市", "province": "新疆维吾尔自治区", "lng": 89.1895, "lat": 42.9513, "type": "地级市", "parent": "新疆维吾尔自治区"},
+    "哈密市": {"name": "哈密市", "province": "新疆维吾尔自治区", "lng": 93.5149, "lat": 42.8332, "type": "地级市", "parent": "新疆维吾尔自治区"},
+    "昌吉市": {"name": "昌吉市", "province": "新疆维吾尔自治区", "lng": 87.3064, "lat": 44.0110, "type": "地级市", "parent": "新疆维吾尔自治区"},
+    "博乐市": {"name": "博乐市", "province": "新疆维吾尔自治区", "lng": 82.0720, "lat": 44.9030, "type": "地级市", "parent": "新疆维吾尔自治区"},
+    "库尔勒市": {"name": "库尔勒市", "province": "新疆维吾尔自治区", "lng": 86.1470, "lat": 41.7600, "type": "地级市", "parent": "新疆维吾尔自治区"},
+    "阿克苏市": {"name": "阿克苏市", "province": "新疆维吾尔自治区", "lng": 80.2610, "lat": 41.1670, "type": "地级市", "parent": "新疆维吾尔自治区"},
+    "喀什市": {"name": "喀什市", "province": "新疆维吾尔自治区", "lng": 75.9891, "lat": 39.4670, "type": "地级市", "parent": "新疆维吾尔自治区"},
+    "和田市": {"name": "和田市", "province": "新疆维吾尔自治区", "lng": 79.9264, "lat": 37.1104, "type": "地级市", "parent": "新疆维吾尔自治区"},
+    "伊宁市": {"name": "伊宁市", "province": "新疆维吾尔自治区", "lng": 81.3330, "lat": 43.9170, "type": "地级市", "parent": "新疆维吾尔自治区"},
+    "阿勒泰市": {"name": "阿勒泰市", "province": "新疆维吾尔自治区", "lng": 88.1330, "lat": 47.8500, "type": "地级市", "parent": "新疆维吾尔自治区"},
+    "塔城市": {"name": "塔城市", "province": "新疆维吾尔自治区", "lng": 82.9830, "lat": 46.7500, "type": "地级市", "parent": "新疆维吾尔自治区"},
+    "阿图什市": {"name": "阿图什市", "province": "新疆维吾尔自治区", "lng": 76.9670, "lat": 39.7170, "type": "地级市", "parent": "新疆维吾尔自治区"},
+    "兰州市": {"name": "兰州市", "province": "甘肃省", "lng": 103.8343, "lat": 36.0611, "type": "地级市", "parent": "甘肃省"},
+    "嘉峪关市": {"name": "嘉峪关市", "province": "甘肃省", "lng": 98.2894, "lat": 39.7726, "type": "地级市", "parent": "甘肃省"},
+    "金昌市": {"name": "金昌市", "province": "甘肃省", "lng": 102.1830, "lat": 38.5170, "type": "地级市", "parent": "甘肃省"},
+    "白银市": {"name": "白银市", "province": "甘肃省", "lng": 104.1389, "lat": 36.5310, "type": "地级市", "parent": "甘肃省"},
+    "天水市": {"name": "天水市", "province": "甘肃省", "lng": 105.7249, "lat": 34.5809, "type": "地级市", "parent": "甘肃省"},
+    "武威市": {"name": "武威市", "province": "甘肃省", "lng": 102.6330, "lat": 37.9170, "type": "地级市", "parent": "甘肃省"},
+    "张掖市": {"name": "张掖市", "province": "甘肃省", "lng": 100.4472, "lat": 38.9381, "type": "地级市", "parent": "甘肃省"},
+    "平凉市": {"name": "平凉市", "province": "甘肃省", "lng": 106.6670, "lat": 35.5170, "type": "地级市", "parent": "甘肃省"},
+    "酒泉市": {"name": "酒泉市", "province": "甘肃省", "lng": 98.4941, "lat": 39.7432, "type": "地级市", "parent": "甘肃省"},
+    "庆阳市": {"name": "庆阳市", "province": "甘肃省", "lng": 107.6330, "lat": 35.7330, "type": "地级市", "parent": "甘肃省"},
+    "定西市": {"name": "定西市", "province": "甘肃省", "lng": 104.6170, "lat": 35.5830, "type": "地级市", "parent": "甘肃省"},
+    "陇南市": {"name": "陇南市", "province": "甘肃省", "lng": 104.9170, "lat": 33.3830, "type": "地级市", "parent": "甘肃省"},
+    "昆明市": {"name": "昆明市", "province": "云南省", "lng": 102.8329, "lat": 24.8801, "type": "地级市", "parent": "云南省"},
+    "曲靖市": {"name": "曲靖市", "province": "云南省", "lng": 103.7960, "lat": 25.4890, "type": "地级市", "parent": "云南省"},
+    "玉溪市": {"name": "玉溪市", "province": "云南省", "lng": 102.5410, "lat": 24.3520, "type": "地级市", "parent": "云南省"},
+    "保山市": {"name": "保山市", "province": "云南省", "lng": 99.1670, "lat": 25.1170, "type": "地级市", "parent": "云南省"},
+    "昭通市": {"name": "昭通市", "province": "云南省", "lng": 103.7170, "lat": 27.3330, "type": "地级市", "parent": "云南省"},
+    "丽江市": {"name": "丽江市", "province": "云南省", "lng": 100.2330, "lat": 26.8721, "type": "地级市", "parent": "云南省"},
+    "普洱市": {"name": "普洱市", "province": "云南省", "lng": 100.9670, "lat": 22.8250, "type": "地级市", "parent": "云南省"},
+    "临沧市": {"name": "临沧市", "province": "云南省", "lng": 100.0830, "lat": 23.8830, "type": "地级市", "parent": "云南省"},
+    "大理市": {"name": "大理市", "province": "云南省", "lng": 100.2676, "lat": 25.6065, "type": "县级市", "parent": "大理白族自治州"},
+    "香格里拉市": {"name": "香格里拉市", "province": "云南省", "lng": 99.7082, "lat": 27.8721, "type": "县级市", "parent": "迪庆藏族自治州"},
+    "西安市": {"name": "西安市", "province": "陕西省", "lng": 108.9402, "lat": 34.3416, "type": "地级市", "parent": "陕西省"},
+    "铜川市": {"name": "铜川市", "province": "陕西省", "lng": 108.9500, "lat": 34.9000, "type": "地级市", "parent": "陕西省"},
+    "宝鸡市": {"name": "宝鸡市", "province": "陕西省", "lng": 107.2369, "lat": 34.3617, "type": "地级市", "parent": "陕西省"},
+    "咸阳市": {"name": "咸阳市", "province": "陕西省", "lng": 108.7089, "lat": 34.3296, "type": "地级市", "parent": "陕西省"},
+    "渭南市": {"name": "渭南市", "province": "陕西省", "lng": 109.5000, "lat": 34.5170, "type": "地级市", "parent": "陕西省"},
+    "延安市": {"name": "延安市", "province": "陕西省", "lng": 109.4898, "lat": 36.5853, "type": "地级市", "parent": "陕西省"},
+    "汉中市": {"name": "汉中市", "province": "陕西省", "lng": 107.0230, "lat": 33.0700, "type": "地级市", "parent": "陕西省"},
+    "榆林市": {"name": "榆林市", "province": "陕西省", "lng": 109.7330, "lat": 38.2830, "type": "地级市", "parent": "陕西省"},
+    "安康市": {"name": "安康市", "province": "陕西省", "lng": 109.0293, "lat": 32.6890, "type": "地级市", "parent": "陕西省"},
+    "商洛市": {"name": "商洛市", "province": "陕西省", "lng": 109.9400, "lat": 33.8670, "type": "地级市", "parent": "陕西省"},
+    "台北市": {"name": "台北市", "province": "台湾省", "lng": 121.5654, "lat": 25.0330, "type": "地级市", "parent": "台湾省"},
+    "新北市": {"name": "新北市", "province": "台湾省", "lng": 121.4670, "lat": 25.0170, "type": "地级市", "parent": "台湾省"},
+    "桃园市": {"name": "桃园市", "province": "台湾省", "lng": 121.3170, "lat": 24.9830, "type": "地级市", "parent": "台湾省"},
+    "台中市": {"name": "台中市", "province": "台湾省", "lng": 120.6736, "lat": 24.1477, "type": "地级市", "parent": "台湾省"},
+    "台南市": {"name": "台南市", "province": "台湾省", "lng": 120.2270, "lat": 23.0000, "type": "地级市", "parent": "台湾省"},
+    "高雄市": {"name": "高雄市", "province": "台湾省", "lng": 120.3130, "lat": 22.6273, "type": "地级市", "parent": "台湾省"},
+    "基隆市": {"name": "基隆市", "province": "台湾省", "lng": 121.7680, "lat": 25.1330, "type": "地级市", "parent": "台湾省"},
+    "新竹市": {"name": "新竹市", "province": "台湾省", "lng": 120.9670, "lat": 24.8030, "type": "地级市", "parent": "台湾省"},
+    "嘉义市": {"name": "嘉义市", "province": "台湾省", "lng": 120.4500, "lat": 23.4670, "type": "地级市", "parent": "台湾省"},
+    "香港岛": {"name": "香港", "province": "香港特别行政区", "lng": 114.1694, "lat": 22.3193, "type": "地级市", "parent": "香港特别行政区"},
+    "澳门半岛": {"name": "澳门", "province": "澳门特别行政区", "lng": 113.5491, "lat": 22.1987, "type": "地级市", "parent": "澳门特别行政区"},
+    "南宁市": {"name": "南宁市", "province": "广西壮族自治区", "lng": 108.3665, "lat": 22.8170, "type": "地级市", "parent": "广西壮族自治区"},
+    "柳州市": {"name": "柳州市", "province": "广西壮族自治区", "lng": 109.4260, "lat": 24.3264, "type": "地级市", "parent": "广西壮族自治区"},
+    "桂林市": {"name": "桂林市", "province": "广西壮族自治区", "lng": 110.2992, "lat": 25.2742, "type": "地级市", "parent": "广西壮族自治区"},
+    "梧州市": {"name": "梧州市", "province": "广西壮族自治区", "lng": 111.2790, "lat": 23.4770, "type": "地级市", "parent": "广西壮族自治区"},
+    "北海市": {"name": "北海市", "province": "广西壮族自治区", "lng": 109.1197, "lat": 21.4810, "type": "地级市", "parent": "广西壮族自治区"},
+    "防城港市": {"name": "防城港市", "province": "广西壮族自治区", "lng": 108.3545, "lat": 21.6146, "type": "地级市", "parent": "广西壮族自治区"},
+    "钦州市": {"name": "钦州市", "province": "广西壮族自治区", "lng": 108.6240, "lat": 21.9810, "type": "地级市", "parent": "广西壮族自治区"},
+    "贵港市": {"name": "贵港市", "province": "广西壮族自治区", "lng": 109.5970, "lat": 23.1130, "type": "地级市", "parent": "广西壮族自治区"},
+    "玉林市": {"name": "玉林市", "province": "广西壮族自治区", "lng": 110.1450, "lat": 22.6430, "type": "地级市", "parent": "广西壮族自治区"},
+    "百色市": {"name": "百色市", "province": "广西壮族自治区", "lng": 106.6190, "lat": 23.9020, "type": "地级市", "parent": "广西壮族自治区"},
+    "贺州市": {"name": "贺州市", "province": "广西壮族自治区", "lng": 111.5630, "lat": 24.4030, "type": "地级市", "parent": "广西壮族自治区"},
+    "河池市": {"name": "河池市", "province": "广西壮族自治区", "lng": 108.0950, "lat": 24.6950, "type": "地级市", "parent": "广西壮族自治区"},
+    "来宾市": {"name": "来宾市", "province": "广西壮族自治区", "lng": 109.2240, "lat": 23.7530, "type": "地级市", "parent": "广西壮族自治区"},
+    "崇左市": {"name": "崇左市", "province": "广西壮族自治区", "lng": 107.3600, "lat": 22.3700, "type": "地级市", "parent": "广西壮族自治区"},
+    "呼和浩特市": {"name": "呼和浩特市", "province": "内蒙古自治区", "lng": 111.7490, "lat": 40.8420, "type": "地级市", "parent": "内蒙古自治区"},
+    "包头市": {"name": "包头市", "province": "内蒙古自治区", "lng": 109.8400, "lat": 40.6570, "type": "地级市", "parent": "内蒙古自治区"},
+    "乌海市": {"name": "乌海市", "province": "内蒙古自治区", "lng": 106.7940, "lat": 39.6530, "type": "地级市", "parent": "内蒙古自治区"},
+    "赤峰市": {"name": "赤峰市", "province": "内蒙古自治区", "lng": 118.8860, "lat": 42.2570, "type": "地级市", "parent": "内蒙古自治区"},
+    "通辽市": {"name": "通辽市", "province": "内蒙古自治区", "lng": 122.2370, "lat": 43.6520, "type": "地级市", "parent": "内蒙古自治区"},
+    "鄂尔多斯市": {"name": "鄂尔多斯市", "province": "内蒙古自治区", "lng": 109.7810, "lat": 39.6090, "type": "地级市", "parent": "内蒙古自治区"},
+    "呼伦贝尔市": {"name": "呼伦贝尔市", "province": "内蒙古自治区", "lng": 119.7720, "lat": 49.2040, "type": "地级市", "parent": "内蒙古自治区"},
+    "巴彦淖尔市": {"name": "巴彦淖尔市", "province": "内蒙古自治区", "lng": 107.3930, "lat": 40.7450, "type": "地级市", "parent": "内蒙古自治区"},
+    "乌兰察布市": {"name": "乌兰察布市", "province": "内蒙古自治区", "lng": 113.1300, "lat": 41.0400, "type": "地级市", "parent": "内蒙古自治区"},
+    "兴安盟": {"name": "乌兰浩特市", "province": "内蒙古自治区", "lng": 122.0810, "lat": 46.0760, "type": "地级市", "parent": "内蒙古自治区"},
+    "锡林郭勒盟": {"name": "锡林浩特市", "province": "内蒙古自治区", "lng": 116.0430, "lat": 43.9330, "type": "地级市", "parent": "内蒙古自治区"},
+    "阿拉善盟": {"name": "巴彦浩特镇", "province": "内蒙古自治区", "lng": 105.7290, "lat": 38.8430, "type": "地级市", "parent": "内蒙古自治区"},
+    "三亚市": {"name": "三亚市", "province": "海南省", "lng": 109.5120, "lat": 18.2480, "type": "地级市", "parent": "海南省"},
+    "儋州市": {"name": "儋州市", "province": "海南省", "lng": 108.3170, "lat": 19.5170, "type": "地级市", "parent": "海南省"},
+    "五指山市": {"name": "五指山市", "province": "海南省", "lng": 109.5170, "lat": 18.7670, "type": "县级市", "parent": "海南省"},
+    "琼海市": {"name": "琼海市", "province": "海南省", "lng": 110.4670, "lat": 19.2500, "type": "县级市", "parent": "海南省"},
+    "文昌市": {"name": "文昌市", "province": "海南省", "lng": 110.7500, "lat": 19.5330, "type": "县级市", "parent": "海南省"},
+    "万宁市": {"name": "万宁市", "province": "海南省", "lng": 110.3830, "lat": 18.7950, "type": "县级市", "parent": "海南省"},
+    "东方市": {"name": "东方市", "province": "海南省", "lng": 108.6500, "lat": 19.0950, "type": "县级市", "parent": "海南省"},
+}
+
+existing_keys = set(REAL_CITY_DATA.keys())
+new_keys = set(NEW_DATA.keys())
+
+duplicates = existing_keys & new_keys
+if duplicates:
+    print(f"发现 {len(duplicates)} 个重复键，正在跳过...")
+    for key in duplicates:
+        del NEW_DATA[key]
+
+REAL_CITY_DATA.update(NEW_DATA)
+
+provinces = {}
+for name, data in REAL_CITY_DATA.items():
+    province = data.get('province', '未知')
+    if province not in provinces:
+        provinces[province] = 0
+    provinces[province] += 1
+
+print(f"\n合并后数据统计：")
+print(f"总数据量: {len(REAL_CITY_DATA)}")
+print(f"省份数量: {len(provinces)}")
+
+expected_provinces = [
+    '北京市', '天津市', '上海市', '重庆市',
+    '河北省', '山西省', '辽宁省', '吉林省', '黑龙江省',
+    '江苏省', '浙江省', '安徽省', '福建省', '江西省', '山东省',
+    '河南省', '湖北省', '湖南省', '广东省', '海南省',
+    '四川省', '贵州省', '云南省', '陕西省', '甘肃省', '青海省',
+    '台湾省', '内蒙古自治区', '广西壮族自治区', '西藏自治区',
+    '宁夏回族自治区', '新疆维吾尔自治区',
+    '香港特别行政区', '澳门特别行政区'
+]
+
+missing = [p for p in expected_provinces if p not in provinces]
+if missing:
+    print(f"\n⚠ 仍缺失省份: {missing}")
+else:
+    print(f"\n✓ 已覆盖所有34个省级行政区！")
+
+print(f"\n各省份数据分布：")
+for prov, count in sorted(provinces.items()):
+    print(f"  {prov}: {count}个")
