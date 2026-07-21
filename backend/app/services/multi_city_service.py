@@ -3,7 +3,8 @@ import random
 from datetime import datetime, timedelta
 from app.services.city_database import (
     CITY_COORDS, CITY_BASIC_INFO, get_high_speed_routes, 
-    get_city_info, BEIJING_3HR_COORDS
+    get_city_info, BEIJING_3HR_COORDS, ALL_CITY_COORDS,
+    MASS_CITY_INFO, MEGA_CITY_INFO, EXTENDED_CITY_BASIC_INFO
 )
 
 
@@ -215,8 +216,76 @@ def add_minutes(time_str: str, minutes: int) -> str:
     return format_time(total_min // 60 % 24, total_min % 60)
 
 
+def generate_city_data(city: str) -> dict:
+    if city in CITY_STATIC_DATA:
+        return CITY_STATIC_DATA[city]
+    
+    city_info = {}
+    if city in CITY_BASIC_INFO:
+        city_info = CITY_BASIC_INFO[city]
+    elif city in MASS_CITY_INFO:
+        city_info = MASS_CITY_INFO[city]
+    elif city in MEGA_CITY_INFO:
+        city_info = MEGA_CITY_INFO[city]
+    elif city in EXTENDED_CITY_BASIC_INFO:
+        city_info = EXTENDED_CITY_BASIC_INFO[city]
+    elif city in ALL_CITY_COORDS:
+        city_info = {
+            'name': city,
+            'highlights': '',
+            'description': f'{city}是一个值得探索的城市',
+            'transport': '建议使用当地公共交通或打车服务'
+        }
+    else:
+        return None
+    
+    highlights = city_info.get('highlights', '')
+    if isinstance(highlights, str):
+        separator = '、' if '、' in highlights else (',' if ',' in highlights else '，')
+        attractions_list = [h.strip() for h in highlights.split(separator) if h.strip()]
+    elif isinstance(highlights, list):
+        attractions_list = highlights
+    else:
+        attractions_list = []
+    
+    if not attractions_list:
+        attractions_list = [f"{city}市中心游览", f"{city}博物馆/纪念馆"]
+    
+    city_data = {
+        "attractions": [],
+        "food": [],
+        "transport": city_info.get('transport', '建议使用当地公共交通或打车服务'),
+        "tips": city_info.get('description', '')[:100] if city_info.get('description') else f'{city}特色美食和文化体验',
+        "avg_daily_budget": city_info.get('avg_daily_budget', 300)
+    }
+    
+    for i, attr_name in enumerate(attractions_list[:6]):
+        base_hour = 9 + (i % 3) * 2 + (i // 3) * 3
+        duration = 2 if i < 4 else 1.5
+        
+        ticket_price = random.choice([0, 30, 50, 80, 100, 120])
+        ticket_str = f"{ticket_price}元" if ticket_price > 0 else "免费"
+        
+        city_data["attractions"].append({
+            "name": attr_name,
+            "morning_start": format_time(base_hour, 0),
+            "duration_hours": duration,
+            "ticket": ticket_str,
+            "tips": f"{attr_name}是{city}的热门景点，建议提前规划"
+        })
+    
+    common_foods = [
+        {"name": f"{city}特色小吃", "location": "市中心美食街", "price_range": "20-40元", "recommend": "当地特色美食"},
+        {"name": f"{city}家常菜馆", "location": "商业区", "price_range": "40-80元", "recommend": "实惠的本地餐厅"},
+        {"name": f"{city}夜市", "location": "老城区", "price_range": "15-30元", "recommend": "夜晚的美食体验"}
+    ]
+    city_data["food"] = common_foods
+    
+    return city_data
+
+
 def generate_city_day_plan(city: str, day_index: int, attractions_count: int = 3) -> dict:
-    city_data = CITY_STATIC_DATA.get(city, {})
+    city_data = generate_city_data(city)
     attractions = city_data.get("attractions", [])
     
     if not attractions:

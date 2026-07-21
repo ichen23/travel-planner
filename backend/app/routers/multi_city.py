@@ -1,9 +1,13 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
-from app.services.multi_city_service import generate_multi_city_itinerary, get_train_info, CITY_STATIC_DATA
+from app.services.multi_city_service import generate_multi_city_itinerary, get_train_info, generate_city_data
+from app.services.city_database import (
+    CITY_BASIC_INFO, MASS_CITY_INFO, MEGA_CITY_INFO,
+    EXTENDED_CITY_BASIC_INFO, ALL_CITY_COORDS
+)
 
-router = APIRouter(prefix="/multi-city", tags=["多城市行程"])
+router = APIRouter(prefix="/multi-city", tags=["多城市游玩"])
 
 
 class CityInfo(BaseModel):
@@ -46,13 +50,34 @@ async def generate_multi_city(request: MultiCityRequest):
 
 @router.get("/cities", summary="获取支持的城市列表")
 async def get_supported_cities():
+    all_city_names = set()
+    all_city_names.update(CITY_BASIC_INFO.keys())
+    all_city_names.update(MASS_CITY_INFO.keys())
+    all_city_names.update(MEGA_CITY_INFO.keys())
+    all_city_names.update(EXTENDED_CITY_BASIC_INFO.keys())
+    all_city_names.update(ALL_CITY_COORDS.keys())
+    
+    all_city_names = sorted(all_city_names)
+    
     cities_data = []
-    for city_name, data in CITY_STATIC_DATA.items():
+    for city_name in all_city_names:
+        city_info = {}
+        if city_name in CITY_BASIC_INFO:
+            city_info = CITY_BASIC_INFO[city_name]
+        elif city_name in MASS_CITY_INFO:
+            city_info = MASS_CITY_INFO[city_name]
+        elif city_name in MEGA_CITY_INFO:
+            city_info = MEGA_CITY_INFO[city_name]
+        elif city_name in EXTENDED_CITY_BASIC_INFO:
+            city_info = EXTENDED_CITY_BASIC_INFO[city_name]
+        
         cities_data.append({
             "name": city_name,
-            "has_attractions": len(data.get("attractions", [])),
-            "has_food": len(data.get("food", [])),
-            "tips": data.get("tips", "")
+            "province": city_info.get("province", ""),
+            "rating": city_info.get("rating", 0),
+            "has_highlight": bool(city_info.get("highlights", "")),
+            "highlights": str(city_info.get("highlights", ""))[:50],
+            "coords": ALL_CITY_COORDS.get(city_name, [0, 0])
         })
     
     return {
@@ -98,9 +123,10 @@ async def quick_plan(request: MultiCityRequest):
 
 @router.get("/city-detail/{city}", summary="获取城市详情")
 async def get_city_detail_multi(city: str):
-    city_data = CITY_STATIC_DATA.get(city)
+    city_data = generate_city_data(city)
+    
     if not city_data:
-        return {"success": False, "message": f"未找到城市 {city} 的数据"}
+        return {"success": False, "message": f"无法生成城市 {city} 的数据"}
     
     return {
         "success": True,
