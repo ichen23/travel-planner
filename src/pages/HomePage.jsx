@@ -1,7 +1,8 @@
-import { Row, Col, Card, Typography, Tag } from 'antd'
-import { RocketOutlined, StarOutlined, ThunderboltOutlined, EnvironmentOutlined, CheckCircleOutlined } from '@ant-design/icons'
+import { Row, Col, Card, Typography, Tag, Divider, Space } from 'antd'
+import { RocketOutlined, StarOutlined, ThunderboltOutlined, EnvironmentOutlined, CheckCircleOutlined, CompassOutlined, SearchOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import SearchBar from '../components/SearchBar'
+import CitySearch from '../components/CitySearch'
 
 const { Title, Paragraph, Text } = Typography
 
@@ -132,6 +133,29 @@ export default function HomePage() {
         </div>
 
         <SearchBar />
+
+        <div style={{ marginTop: 32, marginBottom: 16 }}>
+          <Divider style={{ margin: '16px 0' }}>
+            <Space>
+              <CompassOutlined style={{ color: '#1890ff' }} />
+              <span style={{ fontSize: 16, color: '#333' }}>🔍 按名称搜索城市</span>
+              <Tag color="blue">支持 2000+ 行政区划</Tag>
+            </Space>
+          </Divider>
+          <div style={{ textAlign: 'center' }}>
+            <CitySearch 
+              placeholder="输入城市、县、区名称，如：北京、丽江、九寨沟..."
+              onSelectCity={(city) => {
+                navigate(`/destination/${encodeURIComponent(city.name)}`)
+              }}
+            />
+          </div>
+          <div style={{ marginTop: 16, textAlign: 'center' }}>
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              💡 提示：可以搜索直辖市、省会、地级市、县、区、自治县等
+            </Text>
+          </div>
+        </div>
 
         <Row gutter={[24, 24]} style={{ marginTop: 48 }}>
           {FEATURES.map((f, i) => (

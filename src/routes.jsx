@@ -21,6 +21,7 @@ export const router = createHashRouter([
       { path: 'trains', element: <TrainSearchPage /> },
       { path: 'destinations', element: <DestinationListPage /> },
       { path: 'destinations/:city', element: <DestinationDetailPage /> },
+      { path: 'destination/:city', element: <DestinationDetailPage /> },
       { path: 'planner', element: <PlannerPage /> },
       { path: 'favorites', element: <FavoritesPage /> },
       { path: 'compare', element: <ComparePage /> },

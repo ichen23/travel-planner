@@ -18,6 +18,15 @@ export const getStartCities = () =>
 export const getStats = () =>
   api.get('/destination/stats')
 
+export const searchCities = (keyword, limit = 20, type = 'all') =>
+  api.get('/destination/search-city', { params: { keyword, limit, type } })
+
+export const searchCityDetail = (keyword, limit = 10) =>
+  api.get('/destination/search-city-detail', { params: { keyword, limit } })
+
+export const getRealCities = (province = '', limit = 100) =>
+  api.get('/destination/real-cities', { params: { province, limit } })
+
 export const searchPois = (city, keywords, types = '', offset = 20) =>
   api.get('/destination/poi', { params: { city, keywords, types, offset } })
 

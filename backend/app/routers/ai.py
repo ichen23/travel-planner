@@ -4,6 +4,7 @@ from typing import Optional, Dict, Any
 from app.services.ai_generator_service import (
     generate_content,
     get_available_templates,
+    generate_random_blind_box,
 )
 
 router = APIRouter(prefix="/ai", tags=["AI Content Generation"])
@@ -54,3 +55,12 @@ async def get_template_detail(template_type: str):
         "success": True,
         "template": template,
     }
+
+
+@router.post("/blindbox/generate", summary="生成随机旅行盲盒")
+async def generate_blind_box():
+    try:
+        result = await generate_random_blind_box()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

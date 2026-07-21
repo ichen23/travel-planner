@@ -8,7 +8,10 @@ from app.services.amap_service import (
 from app.services.recommend_service import (
     recommend_destinations, get_city_detail, get_city_realtime_only
 )
-from app.services.city_database import get_all_start_cities, get_destinations_count
+from app.services.city_database import (
+    get_all_start_cities, get_destinations_count, 
+    search_cities, get_city_full_search, REAL_CITY_DATA
+)
 from app.services.itinerary_generator import (
     generate_smart_itinerary, generate_multiple_itineraries, generate_from_natural_language,
     parse_natural_language
@@ -62,7 +65,70 @@ async def get_stats():
         "success": True,
         "total_destinations": count,
         "total_start_cities": len(start_cities),
-        "start_cities": start_cities
+        "start_cities": start_cities,
+        "real_city_count": len(REAL_CITY_DATA),
+    }
+
+
+@router.get("/search-city", summary="搜索城市")
+async def search_city(
+    keyword: str = Query(..., description="搜索关键词"),
+    limit: int = Query(20, description="返回数量限制"),
+    type: str = Query("all", description="搜索类型: all/recommend/real")
+):
+    results = search_cities(keyword, limit, type)
+    return {
+        "success": True,
+        "keyword": keyword,
+        "count": len(results),
+        "results": results
+    }
+
+
+@router.get("/search-city-detail", summary="搜索城市并返回详情")
+async def search_city_detail(
+    keyword: str = Query(..., description="搜索关键词"),
+    limit: int = Query(10, description="返回数量限制")
+):
+    results = get_city_full_search(keyword, limit)
+    return {
+        "success": True,
+        "keyword": keyword,
+        "count": len(results),
+        "results": results
+    }
+
+
+@router.get("/real-cities", summary="获取所有真实行政区划")
+async def get_real_cities(
+    province: str = Query("", description="省份筛选"),
+    limit: int = Query(100, description="返回数量限制")
+):
+    if not REAL_CITY_DATA:
+        return {"success": False, "message": "真实城市数据未加载"}
+    
+    cities = []
+    for name, data in REAL_CITY_DATA.items():
+        if province and data.get('province', '') != province:
+            continue
+        cities.append({
+            'name': name,
+            'province': data.get('province', ''),
+            'type': data.get('type', ''),
+            'parent': data.get('parent', ''),
+            'coords': [data['lng'], data['lat']],
+        })
+        if len(cities) >= limit:
+            break
+    
+    provinces = list(set(data['province'] for data in REAL_CITY_DATA.values()))
+    
+    return {
+        "success": True,
+        "count": len(cities),
+        "total": len(REAL_CITY_DATA),
+        "provinces": provinces,
+        "cities": cities
     }
 
 

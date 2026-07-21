@@ -7,6 +7,26 @@ from app.services.beijing_3hr_data import (
     get_beijing_3hr_destinations, get_beijing_3hr_info, format_travel_time
 )
 
+REAL_CITY_DATA = {}
+try:
+    from app.services.real_city_data import REAL_CITY_DATA as _REAL_CITY_DATA
+    REAL_CITY_DATA = _REAL_CITY_DATA
+except Exception:
+    pass
+
+REAL_CITY_COORDS = {name: [data['lng'], data['lat']] for name, data in REAL_CITY_DATA.items()} if REAL_CITY_DATA else {}
+
+REAL_CITY_LOOKUP = {}
+if REAL_CITY_DATA:
+    for name, data in REAL_CITY_DATA.items():
+        REAL_CITY_LOOKUP[name] = {
+            'name': name,
+            'province': data.get('province', ''),
+            'type': data.get('type', ''),
+            'parent': data.get('parent', ''),
+            'coords': [data['lng'], data['lat']],
+        }
+
 EXTENDED_CITY_COORDS = {}
 EXTENDED_CITY_TIPS = {}
 EXTENDED_CITY_TAGS = {}
@@ -119,7 +139,11 @@ CITY_COORDS = {
     "齐齐哈尔": (123.9741, 47.3542), "牡丹江": (129.5968, 44.5527),
 }
 
-ALL_CITY_COORDS = {**CITY_COORDS, **EXTENDED_CITY_COORDS, **MASS_CITY_COORDS, **MEGA_CITY_COORDS}
+ALL_CITY_COORDS = {**CITY_COORDS, **EXTENDED_CITY_COORDS, **MASS_CITY_COORDS, **MEGA_CITY_COORDS, **REAL_CITY_COORDS}
+
+CITIES_DATA = {}
+for name in list(CITY_COORDS.keys()) + list(EXTENDED_CITY_COORDS.keys()) + list(MASS_CITY_COORDS.keys()) + list(MEGA_CITY_COORDS.keys()):
+    CITIES_DATA[name] = {'province': '', 'type': '城市'}
 
 CITY_HIGH_SPEED_DATA = {
     "北京": [
@@ -1024,3 +1048,89 @@ def compare_cities(cities):
             }
         })
     return results
+
+
+def search_cities(keyword: str, limit: int = 20, search_type: str = "all"):
+    if not keyword or len(keyword.strip()) == 0:
+        return []
+    
+    keyword = keyword.strip()
+    results = []
+    seen = set()
+    
+    all_sources = []
+    
+    if search_type in ("all", "recommend"):
+        for name in ALL_CITY_COORDS:
+            if name not in seen:
+                all_sources.append((name, "推荐城市"))
+                seen.add(name)
+    
+    if search_type in ("all", "real"):
+        for name in REAL_CITY_LOOKUP:
+            if name not in seen:
+                all_sources.append((name, "行政区划"))
+                seen.add(name)
+    
+    exact_matches = []
+    prefix_matches = []
+    contains_matches = []
+    
+    for name, source in all_sources:
+        if name == keyword:
+            exact_matches.append((name, source))
+        elif name.startswith(keyword):
+            prefix_matches.append((name, source))
+        elif keyword in name:
+            contains_matches.append((name, source))
+    
+    sorted_matches = exact_matches + prefix_matches + contains_matches
+    
+    for name, source in sorted_matches[:limit]:
+        city_data = None
+        
+        if name in REAL_CITY_LOOKUP:
+            city_data = REAL_CITY_LOOKUP[name]
+        elif name in CITIES_DATA:
+            city_data = {
+                'name': name,
+                'province': CITIES_DATA[name].get('province', ''),
+                'type': '推荐城市',
+                'parent': '',
+                'coords': ALL_CITY_COORDS.get(name),
+            }
+        else:
+            city_data = {
+                'name': name,
+                'province': '',
+                'type': source,
+                'parent': '',
+                'coords': ALL_CITY_COORDS.get(name),
+            }
+        
+        results.append(city_data)
+    
+    return results
+
+
+def get_city_full_search(keyword: str, limit: int = 30):
+    search_results = search_cities(keyword, limit, "all")
+    
+    detailed_results = []
+    for result in search_results:
+        city_name = result['name']
+        detail = get_city_info(city_name)
+        
+        detailed_results.append({
+            'name': city_name,
+            'province': result.get('province', ''),
+            'type': result.get('type', ''),
+            'parent': result.get('parent', ''),
+            'coords': result.get('coords'),
+            'has_detail': city_name in CITIES_DATA or city_name in ALL_CITY_COORDS,
+            'rating': detail.get('rating'),
+            'highlights': detail.get('highlights', '')[:100],
+            'tags': detail.get('tags', []),
+        })
+    
+    return detailed_results

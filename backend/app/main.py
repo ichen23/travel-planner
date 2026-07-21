@@ -1,10 +1,14 @@
 import logging
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pathlib import Path
 
 from app.routers.train import router as train_router
 from app.routers.destination import router as destination_router

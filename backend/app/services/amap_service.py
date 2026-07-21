@@ -1,6 +1,11 @@
 import httpx
 import logging
 import os
+import time
+import asyncio
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -10,6 +15,25 @@ AMAP_NEARBY_URL = "https://restapi.amap.com/v3/place/around"
 AMAP_GEOCODE_URL = "https://restapi.amap.com/v3/geocode/geo"
 AMAP_DISTRICT_URL = "https://restapi.amap.com/v3/config/district"
 AMAP_TIP_URL = "https://restapi.amap.com/v3/assistant/inputtips"
+
+_cache = {}
+_CACHE_TTL = 3600
+_cache_lock = asyncio.Lock()
+
+def _get_cache(key):
+    if key in _cache:
+        entry = _cache[key]
+        if time.time() - entry['time'] < _CACHE_TTL:
+            return entry['data']
+    return None
+
+def _set_cache(key, data):
+    _cache[key] = {'data': data, 'time': time.time()}
+
+def clear_cache():
+    global _cache
+    _cache = {}
+    logger.info("Cache cleared")
 
 
 async def _make_request(url: str, params: dict) -> dict:
@@ -71,24 +95,61 @@ def _parse_poi(poi: dict) -> dict:
 
 
 async def geocode_city(city_name: str):
+    cache_key = f"geocode:{city_name}"
+    cached = _get_cache(cache_key)
+    if cached is not None:
+        return cached
+    
     data = await _make_request(AMAP_GEOCODE_URL, {"address": city_name})
     if data.get("status") == "1" and data.get("geocodes"):
         geo = data["geocodes"][0]
         lng, lat = geo["location"].split(",")
-        return {"name": geo["formatted_address"], "lng": float(lng), "lat": float(lat),
-                "adcode": geo.get("adcode"), "province": geo.get("province"),
-                "city": geo.get("city"), "district": geo.get("district")}
+        result = {"name": geo["formatted_address"], "lng": float(lng), "lat": float(lat),
+                  "adcode": geo.get("adcode"), "province": geo.get("province"),
+                  "city": geo.get("city"), "district": geo.get("district")}
+        _set_cache(cache_key, result)
+        return result
+    _set_cache(cache_key, None)
     return None
 
 
 async def search_poi(city: str, keywords: str, types: str = "", offset: int = 20) -> list:
+    cache_key = f"poi:{city}:{keywords}:{types}:{offset}"
+    cached = _get_cache(cache_key)
+    if cached is not None:
+        return cached
+    
+    geo = await geocode_city(city)
+    
+    if geo:
+        city_name = geo.get("city") or city
+        params = {"keywords": keywords, "city": city_name, "citylimit": "true", "offset": offset, "page": 1}
+        if types:
+            params["types"] = types
+        data = await _make_request(AMAP_POI_URL, params)
+        
+        if data.get("status") == "1" and data.get("pois"):
+            result = [_parse_poi(p) for p in data.get("pois", [])]
+            _set_cache(cache_key, result)
+            return result
+        
+        if geo.get("lng") and geo.get("lat"):
+            nearby = await search_nearby(geo["lng"], geo["lat"], keywords, 10000, offset, types)
+            if nearby:
+                _set_cache(cache_key, nearby)
+                return nearby
+    
     params = {"keywords": keywords, "city": city, "citylimit": "true", "offset": offset, "page": 1}
     if types:
         params["types"] = types
     data = await _make_request(AMAP_POI_URL, params)
-    if data.get("status") != "1":
-        return []
-    return [_parse_poi(p) for p in data.get("pois", [])]
+    if data.get("status") == "1":
+        result = [_parse_poi(p) for p in data.get("pois", [])]
+        _set_cache(cache_key, result)
+        return result
+    
+    _set_cache(cache_key, [])
+    return []
 
 
 async def search_nearby(lng: float, lat: float, keywords: str = "",
@@ -149,6 +210,11 @@ async def get_city_hot_content(city: str) -> dict:
 
 
 async def get_city_content_full(city: str) -> dict:
+    cache_key = f"city_content:{city}"
+    cached = _get_cache(cache_key)
+    if cached is not None:
+        return cached
+    
     import asyncio
     attractions, foods, hotels = await asyncio.gather(
         search_attractions(city, limit=15),
@@ -162,7 +228,19 @@ async def get_city_content_full(city: str) -> dict:
         foods = []
     if isinstance(hotels, Exception):
         hotels = []
-    return {
+    
+    if not attractions and not foods:
+        geo = await geocode_city(city)
+        if geo:
+            nearby = await get_nearby_content(geo["lng"], geo["lat"], 10000)
+            if not attractions:
+                attractions = nearby["attractions"]
+            if not foods:
+                foods = nearby["foods"]
+            if not hotels:
+                hotels = nearby["hotels"]
+    
+    result = {
         "attractions": sorted([a for a in attractions if a.get("rating", 0) > 0],
                               key=lambda x: x.get("rating", 0), reverse=True),
         "foods": sorted([f for f in foods if f.get("rating", 0) > 0],
@@ -170,6 +248,8 @@ async def get_city_content_full(city: str) -> dict:
         "hotels": sorted([h for h in hotels if h.get("rating", 0) > 0],
                         key=lambda x: x.get("rating", 0), reverse=True),
     }
+    _set_cache(cache_key, result)
+    return result
 
 
 async def get_nearby_content(lng: float, lat: float, radius: int = 3000) -> dict:
@@ -212,4 +292,11 @@ async def get_city_districts(city_name: str):
     data = await _make_request(AMAP_DISTRICT_URL, {"keywords": city_name, "subdistrict": 0})
     if data.get("status") == "1" and data.get("districts"):
         return data["districts"][0]
+    return None
+
+
+async def get_city_adcode(city_name: str):
+    district = await get_city_districts(city_name)
+    if district:
+        return district.get("adcode")
     return None

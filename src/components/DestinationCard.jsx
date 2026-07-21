@@ -78,6 +78,22 @@ const QuickInfo = ({ duration, price, rating }) => {
   )
 }
 
+const PoiItem = ({ item, color }) => {
+  const name = typeof item === 'string' ? item : item?.name || ''
+  const address = typeof item === 'object' ? item?.address : null
+  
+  return (
+    <Tooltip title={address ? `📍 ${address}` : name}>
+      <Tag color={color} style={{ fontSize: 11, cursor: address ? 'pointer' : 'default' }}>
+        {name}
+        {address && address.length > 0 && (
+          <span style={{ opacity: 0.6, marginLeft: 4 }}>📍</span>
+        )}
+      </Tag>
+    </Tooltip>
+  )
+}
+
 const TipsSection = ({ tips }) => {
   if (!tips) return null
 
@@ -109,9 +125,7 @@ const TipsSection = ({ tips }) => {
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                     {tips.food.slice(0, 6).map((item, i) => (
-                      <Tag key={i} color="volcano" style={{ fontSize: 11 }}>
-                        {item}
-                      </Tag>
+                      <PoiItem key={i} item={item} color="volcano" />
                     ))}
                   </div>
                 </div>
@@ -124,7 +138,7 @@ const TipsSection = ({ tips }) => {
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                     {tips.food_spots.slice(0, 4).map((item, i) => (
-                      <Tag key={i} color="orange" style={{ fontSize: 11 }}>{item}</Tag>
+                      <Tag key={i} color="orange" style={{ fontSize: 11 }}>{typeof item === 'object' ? item.name : item}</Tag>
                     ))}
                   </div>
                 </div>
@@ -137,9 +151,7 @@ const TipsSection = ({ tips }) => {
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                     {tips.attractions.slice(0, 6).map((item, i) => (
-                      <Tag key={i} color="blue" style={{ fontSize: 11 }}>
-                        {item}
-                      </Tag>
+                      <PoiItem key={i} item={item} color="blue" />
                     ))}
                   </div>
                 </div>
@@ -357,9 +369,15 @@ export default function DestinationCard({ dest }) {
           <div style={{ marginBottom: 12 }}>
             <Text type="secondary" style={{ fontSize: 11, marginBottom: 4, display: 'block' }}>精选景点</Text>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-              {(Array.isArray(dest.highlights) ? dest.highlights : dest.highlights.split(/[、,，]/)).slice(0, 3).map((h, i) => (
-                <Tag key={i} color="cyan" style={{ fontSize: 11 }}>{h}</Tag>
-              ))}
+              {(Array.isArray(dest.highlights) ? dest.highlights : dest.highlights.split(/[、,，]/)).slice(0, 3).map((h, i) => {
+                const name = typeof h === 'string' ? h : h?.name || ''
+                const address = typeof h === 'object' ? h?.address : null
+                return (
+                  <Tooltip key={i} title={address ? `📍 ${address}` : name}>
+                    <Tag color="cyan" style={{ fontSize: 11 }}>{name}</Tag>
+                  </Tooltip>
+                )
+              })}
             </div>
           </div>
         )}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Card, Row, Col, Select, InputNumber, Button, Tag, Typography, Spin, Empty, Slider, message, Divider, Progress, Avatar, Badge } from 'antd'
-import { GiftOutlined, ThunderboltOutlined, DollarOutlined, CalendarOutlined, BulbOutlined, ReloadOutlined, ArrowRightOutlined, StarOutlined, FireOutlined, CrownOutlined, RocketOutlined, ShareAltOutlined, SwapOutlined, HeartOutlined, SmileOutlined, TrophyOutlined, ThunderboltFilled } from '@ant-design/icons'
+import { Card, Row, Col, Select, InputNumber, Button, Tag, Typography, Spin, Empty, Slider, message, Divider, Progress, Avatar, Badge, Tooltip, Collapse } from 'antd'
+import { GiftOutlined, ThunderboltOutlined, DollarOutlined, CalendarOutlined, BulbOutlined, ReloadOutlined, ArrowRightOutlined, StarOutlined, FireOutlined, CrownOutlined, RocketOutlined, ShareAltOutlined, SwapOutlined, HeartOutlined, SmileOutlined, TrophyOutlined, ThunderboltFilled, EnvironmentOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { getRecommendations } from '../services/trainService'
 import dayjs from 'dayjs'
@@ -151,6 +151,23 @@ const generateCombination = (arr, minCount = 2, maxCount = 4) => {
 
 const generateUniqueId = () => Math.random().toString(36).substr(2, 9)
 
+const extractPoiName = (item) => {
+  if (!item) return ''
+  if (typeof item === 'string') return item
+  return item.name || ''
+}
+
+const extractPoiAddress = (item) => {
+  if (!item || typeof item === 'string') return ''
+  return item.address || ''
+}
+
+const getPoiDisplayName = (item) => {
+  const name = extractPoiName(item)
+  const address = extractPoiAddress(item)
+  return address ? `${name} 📍` : name
+}
+
 const shuffleArray = (arr) => {
   const newArr = [...arr]
   for (let i = newArr.length - 1; i > 0; i--) {
@@ -236,15 +253,35 @@ export default function BlindBoxPage() {
         const adjective = getRandomItem(DESTINATION_ADJECTIVES)
         const title = getRandomItem(DESTINATION_TITLES)
 
-        const attractions = selectedDest.tips?.attractions || ['当地热门景点']
-        const foods = selectedDest.tips?.food || ['当地特色美食']
+        const attractions = selectedDest.tips?.attractions || [{name: '当地热门景点', address: ''}]
+        const foods = selectedDest.tips?.food || [{name: '当地特色美食', address: ''}]
         const itinerary = selectedDest.tips?.itinerary_suggestion || ['探索当地文化', '品尝特色美食']
         const photoSpots = selectedDest.tips?.best_photo_spots || ['城市广场', '老街巷弄']
 
-        const finalAttractions = generateCombination(attractions, 2, 5)
-        const finalFoods = generateCombination(foods, 2, 4)
-        const finalItinerary = generateCombination(itinerary, 1, 3)
-        const finalPhotoSpots = generateCombination(photoSpots, 1, 3)
+        const attractionNames = attractions.map(a => typeof a === 'string' ? a : (a.name || ''))
+        const foodNames = foods.map(f => typeof f === 'string' ? f : (f.name || ''))
+        const itineraryNames = itinerary.map(i => typeof i === 'string' ? i : (i.name || ''))
+        const photoSpotNames = photoSpots.map(p => typeof p === 'string' ? p : (p.name || ''))
+
+        const finalAttractions = generateCombination(attractionNames, 2, 5)
+        const finalFoods = generateCombination(foodNames, 2, 4)
+        const finalItinerary = generateCombination(itineraryNames, 1, 3)
+        const finalPhotoSpots = generateCombination(photoSpotNames, 1, 3)
+
+        const attractionDetails = {}
+        attractions.forEach(a => {
+          const name = typeof a === 'string' ? a : (a.name || '')
+          if (name) {
+            attractionDetails[name] = typeof a === 'object' ? a : { name, address: '' }
+          }
+        })
+        const foodDetails = {}
+        foods.forEach(f => {
+          const name = typeof f === 'string' ? f : (f.name || '')
+          if (name) {
+            foodDetails[name] = typeof f === 'object' ? f : { name, address: '' }
+          }
+        })
 
         const uniqueId = generateUniqueId()
         
@@ -268,6 +305,8 @@ export default function BlindBoxPage() {
           topFoods: finalFoods,
           itinerary: finalItinerary,
           photoSpots: finalPhotoSpots,
+          attractionDetails: attractionDetails,
+          foodDetails: foodDetails,
           luckyRank: luckyRank,
           luckyNumbers: luckyNumbers,
           zodiacSign: zodiacSign,
@@ -612,11 +651,18 @@ export default function BlindBoxPage() {
                       <FireOutlined style={{ color: '#ff4d4f' }} /> 必去景点 ({result.topAttractions.length})
                     </Text>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                      {result.topAttractions.map((attr, i) => (
-                        <Tag key={i} color="geekblue" style={{ fontSize: 13, padding: '6px 12px', borderRadius: 8 }}>
-                          🎯 {attr}
-                        </Tag>
-                      ))}
+                      {result.topAttractions.map((attr, i) => {
+                        const attrDetail = result.attractionDetails?.[attr]
+                        const address = attrDetail?.address || ''
+                        return (
+                          <Tooltip key={i} title={address ? `📍 ${address}` : attr}>
+                            <Tag color="geekblue" style={{ fontSize: 13, padding: '6px 12px', borderRadius: 8 }}>
+                              🎯 {attr}
+                              {address && <span style={{ opacity: 0.6, marginLeft: 4 }}>📍</span>}
+                            </Tag>
+                          </Tooltip>
+                        )
+                      })}
                     </div>
                   </div>
 
@@ -625,11 +671,18 @@ export default function BlindBoxPage() {
                       🍽️ 必吃美食 ({result.topFoods.length})
                     </Text>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                      {result.topFoods.map((food, i) => (
-                        <Tag key={i} color="volcano" style={{ fontSize: 13, padding: '6px 12px', borderRadius: 8 }}>
-                          😋 {food}
-                        </Tag>
-                      ))}
+                      {result.topFoods.map((food, i) => {
+                        const foodDetail = result.foodDetails?.[food]
+                        const address = foodDetail?.address || ''
+                        return (
+                          <Tooltip key={i} title={address ? `📍 ${address}` : food}>
+                            <Tag color="volcano" style={{ fontSize: 13, padding: '6px 12px', borderRadius: 8 }}>
+                              😋 {food}
+                              {address && <span style={{ opacity: 0.6, marginLeft: 4 }}>📍</span>}
+                            </Tag>
+                          </Tooltip>
+                        )
+                      })}
                     </div>
                   </div>
 
@@ -719,6 +772,51 @@ export default function BlindBoxPage() {
                   }}>
                     <Text>{result.travelMode.icon} <strong>推荐出行：</strong>{result.travelMode.text}</Text>
                   </div>
+
+                  {(Object.keys(result.attractionDetails || {}).length > 0 || Object.keys(result.foodDetails || {}).length > 0) && (
+                    <Collapse
+                      size="small"
+                      style={{ marginTop: 12 }}
+                      items={[
+                        {
+                          key: 'poi-details',
+                          label: (
+                            <Text strong style={{ fontSize: 14 }}>
+                              <EnvironmentOutlined /> 查看所有POI详细地址 ({Object.keys(result.attractionDetails || {}).length + Object.keys(result.foodDetails || {}).length})
+                            </Text>
+                          ),
+                          children: (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                              {Object.keys(result.attractionDetails || {}).length > 0 && (
+                                <div>
+                                  <Text strong style={{ color: '#1677ff', marginBottom: 8, display: 'block' }}>🏔️ 景点</Text>
+                                  {Object.entries(result.attractionDetails).map(([name, info], i) => (
+                                    <div key={i} style={{ padding: '8px 12px', background: '#f0f5ff', borderRadius: 8, marginBottom: 6 }}>
+                                      <div style={{ fontWeight: 600 }}>{name}</div>
+                                      {info?.address && <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>📍 {info.address}</div>}
+                                      {info?.rating > 0 && <div style={{ fontSize: 12, color: '#faad14' }}>⭐ 评分: {info.rating}</div>}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {Object.keys(result.foodDetails || {}).length > 0 && (
+                                <div>
+                                  <Text strong style={{ color: '#ff6b6b', marginBottom: 8, display: 'block' }}>🍜 美食</Text>
+                                  {Object.entries(result.foodDetails).map(([name, info], i) => (
+                                    <div key={i} style={{ padding: '8px 12px', background: '#fff1f0', borderRadius: 8, marginBottom: 6 }}>
+                                      <div style={{ fontWeight: 600 }}>{name}</div>
+                                      {info?.address && <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>📍 {info.address}</div>}
+                                      {info?.rating > 0 && <div style={{ fontSize: 12, color: '#faad14' }}>⭐ 评分: {info.rating}</div>}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ),
+                        },
+                      ]}
+                    />
+                  )}
                 </Card>
 
                 <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>

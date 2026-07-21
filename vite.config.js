@@ -7,7 +7,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'https://travel-planner-production-d703.up.railway.app',
+        target: 'http://localhost:8000',
         changeOrigin: true,
       }
     }

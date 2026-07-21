@@ -1,12 +1,29 @@
 import httpx
 import logging
 import os
+import time
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
 AMAP_WEATHER_URL = "https://restapi.amap.com/v3/weather/weatherInfo"
 AMAP_GEOCODE_URL = "https://restapi.amap.com/v3/geocode/geo"
+
+_cache = {}
+_CACHE_TTL = 1800
+
+def _get_cache(key):
+    if key in _cache:
+        entry = _cache[key]
+        if time.time() - entry['time'] < _CACHE_TTL:
+            return entry['data']
+    return None
+
+def _set_cache(key, data):
+    _cache[key] = {'data': data, 'time': time.time()}
 
 
 async def get_city_adcode(city_name: str) -> str:
@@ -68,6 +85,11 @@ async def get_weather(city_adcode: str):
 
 
 async def get_weather_forecast(city_name: str):
+    cache_key = f"weather:{city_name}"
+    cached = _get_cache(cache_key)
+    if cached is not None:
+        return cached
+    
     amap_key = os.environ.get('AMAP_KEY', '')
     if not amap_key:
         logger.error("AMAP_KEY is not configured")
@@ -113,7 +135,7 @@ async def get_weather_forecast(city_name: str):
                 }
                 result_days.append(item)
             
-            return {
+            result = {
                 "city": forecast.get("city") or city_name,
                 "report_time": forecast.get("reporttime"),
                 "current": current,
@@ -124,6 +146,8 @@ async def get_weather_forecast(city_name: str):
                 "rain_alert": _check_rain_alert(result_days),
                 "temperature_trend": _analyze_temperature_trend(result_days),
             }
+            _set_cache(cache_key, result)
+            return result
         else:
             logger.warning(f"Weather forecast failed: {data.get('info')}")
             return None

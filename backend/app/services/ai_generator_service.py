@@ -37,6 +37,36 @@ TEMPLATE_CONFIG = {
         "required_params": ["title", "location"],
         "rule_based": True,
     },
+    "poetic": {
+        "name": "诗意游记",
+        "desc": "文艺诗意的旅行随笔",
+        "required_params": ["title", "city"],
+        "rule_based": True,
+    },
+    "humorous": {
+        "name": "幽默吐槽",
+        "desc": "搞笑幽默的旅行体验",
+        "required_params": ["title", "city"],
+        "rule_based": True,
+    },
+    "literary": {
+        "name": "文艺散文",
+        "desc": "文艺青年风格的旅行散文",
+        "required_params": ["title", "city"],
+        "rule_based": True,
+    },
+    "epic": {
+        "name": "史诗叙事",
+        "desc": "宏大叙事风格的旅行故事",
+        "required_params": ["title", "city"],
+        "rule_based": True,
+    },
+    "ancient": {
+        "name": "古风游记",
+        "desc": "仿古文风格的旅行记录",
+        "required_params": ["title", "city"],
+        "rule_based": True,
+    },
 }
 
 SCENIC_SPOT_DATA = {
@@ -1204,10 +1234,629 @@ def _generate_photo_spots(context: dict) -> dict:
     return {"title": f"{title}专业拍照指南", "content": content, "type": "photo_spots"}
 
 
+def _generate_poetic(context: dict) -> dict:
+    title = context.get("title", "远方")
+    city = context.get("city", "")
+    scenic_type = context.get("type", "风景")
+    days = context.get("days", 3)
+    season = context.get("season", "")
+    
+    scenic_data = _get_scenic_data(title, scenic_type)
+    history = scenic_data.get("history", "")
+    highlights = scenic_data.get("highlights", [])
+    icon = scenic_data.get("icon", "📍")
+    
+    poems = [
+        f"""✨ 《{title}》· 行记
+
+有人说，{city}是一场不愿醒来的梦。
+当我踏上这片土地，才终于明白——
+所有的等待，都是为了这一刻的相遇。
+
+{history[:80] if history else f'{title}，藏在时光褶皱里的秘密'}
+
+{icon} 行走在{city}的街巷，
+风里飘着{random.choice(['桂花', '梧桐', '青草', '花香'])}的味道，
+耳边是{random.choice(['古老的钟声', '潺潺的流水', '游人的笑语', '静默的风声'])}。
+
+最难忘的，是那一刻的心动：
+{highlights[0] if highlights else '抬头撞见的一抹晚霞'}
+
+原来，
+远方并不遥远，
+它一直在那里，
+等我，
+也等你。
+
+—— 记于{city}{title}
+{random.choice(['春', '夏', '秋', '冬'])}日""",
+
+        f"""🌸 致{city}的一封信
+
+亲爱的{city}：
+
+写下这封信的时候，我正坐在{title}的角落，
+阳光从{random.choice(['梧桐叶', '古檐角', '窗帘缝', '湖面'])}斜斜地落下来，
+在地上画出斑驳的光影。
+
+我来过{days}天了，
+却觉得还没真正认识你。
+
+{history[:100] if history else '你有太多故事，多得讲不完'}
+
+但我记住了——
+{highlights[0] if highlights else '那个让我停下来的瞬间'}
+还有{random.choice(['街角的老店', '河边的垂柳', '午夜的灯火', '清晨的薄雾'])}。
+
+我想我会再来的。
+带着更多的时间，
+更好的心情，
+还有，
+想与你分享的人。
+
+此致
+敬礼
+
+一个路过的旅人""",
+
+        f"""🌙 {city}·夜·{title}
+
+夜幕四合，{city}褪去了白日的喧嚣，
+露出她最温柔的面容。
+
+{title}在月光下沉睡，
+{random.choice(['古塔', '湖水', '古城墙', '老街'])}沉默不语，
+却藏着千年的故事。
+
+我独自走着，
+脚步声在石板路上回响，
+像是在与历史对话。
+
+{history[:60] if history else '这里的一切，都在诉说着什么'}
+
+忽然明白，
+旅行的意义，
+从来不是打卡多少景点，
+而是——
+在某个不经意的瞬间，
+与自己相遇。
+
+—— 于{title}月下""",
+
+        f"""🍂 如果有一天，我想念{city}
+
+我会想起{title}的{random.choice(['落叶', '烟雨', '阳光', '星空'])}，
+想起{random.choice(['街角的咖啡店', '河边的长椅', '山顶的观景台', '巷口的小吃摊'])}，
+想起在那里遇见的{random.choice(['陌生人', '老朋友', '自己', '时光'])}。
+
+{history[:80] if history else f'{city}，一个让人想要留下的地方'}
+
+{highlights[0] if highlights else '有些风景，看过就忘不掉'}
+
+我知道，
+有些地方，
+注定是要回去的。
+不是因为那里有多好，
+而是因为——
+那里的我，
+比现在的我，
+更年轻，
+更勇敢，
+更相信美好。
+
+愿你也能找到，
+属于你的那个{city}。""",
+    ]
+    
+    content = random.choice(poems)
+    return {"title": f"《{title}》诗意行记", "content": content, "type": "poetic"}
+
+
+def _generate_humorous(context: dict) -> dict:
+    title = context.get("title", "景点")
+    city = context.get("city", "")
+    scenic_type = context.get("type", "风景")
+    days = context.get("days", 3)
+    budget = context.get("budget", 3000)
+    
+    scenic_data = _get_scenic_data(title, scenic_type)
+    highlights = scenic_data.get("highlights", [])
+    tips = scenic_data.get("tips", [])
+    
+    templates = [
+        f"""🤣 {city}{title}踩坑实录
+
+【出发前的我】：这次一定要做攻略！绝不当冤大头！
+【到了之后的我】：真香.jpg
+
+📝 真实体验报告：
+
+🚶 走路走到怀疑人生：
+{highlights[0] if highlights else '某个景点'}比想象中大{random.choice(['十倍', '百倍', '一个银河系'])}！
+建议带{random.choice(['滑板', '轮椅', '救护车', '男朋友当拐杖'])}
+
+💰 钱花得像流水：
+预算{budget}，实际花了{int(budget * random.uniform(1.2, 2.5))}
+{random.choice(['一杯奶茶30块', '一个纪念章50块', '一根烤肠20块', '停车费100块'])}
+我哭了，钱包也哭了
+
+📸 拍照两小时，修图两小时：
+明明{title}很美，
+为什么我拍出来像游客照？
+{random.choice(['一定是角度不对', '一定是光线不好', '一定是我太丑', '一定是手机的问题'])}
+对！一定是手机的问题！
+
+😅 那些尴尬瞬间：
+{tips[0] if tips else ['走错厕所', '坐过站', '忘带充电宝', '手机没电']}
+
+🙋‍♀️ 给后来人的建议：
+1. {tips[1] if len(tips) > 1 else '穿舒服的鞋子'}
+2. 带够钱（信用卡也行）
+3. 多带几套衣服（拍照需要）
+4. 别相信网红推荐的餐厅
+
+总之，{city}{title}——
+不去会后悔，去了也会后悔。
+但至少，后悔得很开心！""",
+
+        f"""😂 {city}旅行吐槽大会
+
+欢迎来到{city}{title}吐槽现场！
+我是主持人——被坑过无数次的老司机。
+
+【景点篇】：
+{highlights[0] if highlights else title}：图片仅供参考，请以实物为准。
+{random.choice(['卖家秀vs买家秀', '理想vs现实', '攻略vs实际'])}
+我：？？？这和我看到的是同一个地方吗？
+
+【美食篇】：
+{random.choice(['网红店排队3小时，吃了3分钟', '探店博主说好吃，我吃了想骂人', '本地推荐果然靠谱', '景区美食都是智商税'])}
+{tips[0] if tips else '别在景区吃饭！别在景区吃饭！别在景区吃饭！'}
+重要的事情说三遍。
+
+【交通篇】：
+打车：{random.choice(['司机不认识路', '司机绕路', '司机拒载', '司机话太多'])}
+地铁：{random.choice(['找不到入口', '坐反方向', '错过末班车', '人挤成沙丁鱼'])}
+走路：走到怀疑人生，朋友圈步数第一名。
+
+【住宿篇】：
+图片：五星级豪华酒店
+实际：如家旗下快捷酒店
+价格：五星级豪华酒店的价格
+我：🙂🙂🙂
+
+【总结】：
+{city}{title}好不好玩？
+好玩！
+下次还来吗？
+来！
+带攻略了吗？
+带了！
+能用上吗？
+不能！
+为什么？
+因为——计划永远赶不上变化。
+
+人生嘛，就是要这样起起落落落落落……""",
+
+        f"""🎭 {city}历险记·{title}篇
+
+第1天：雄心勃勃
+"这次我一定要玩遍{city}！"
+结果：倒时差倒了一整天。
+
+第2天：信心满满
+"今天去{title}！"
+结果：{random.choice(['排队2小时', '下雨', '闭馆', '迷路'])}。
+
+第3天：怀疑人生
+"我是谁？我在哪？我在干什么？"
+结果：{random.choice(['在酒店躺了一天', '在咖啡店坐了一天', '在商场逛了一天', '在景点门口拍了张照就走了'])}。
+
+第4天：佛系旅行
+"随缘吧，能玩多少是多少。"
+结果：发现了{random.choice(['一家超棒的小店', '一处没人的美景', '一顿好吃的饭', '一个有趣的人'])}。
+
+第5天：依依不舍
+"还没玩够就要走了。"
+结果：赶高铁差点迟到。
+
+【账单】：
+预算：{budget}元
+实际：{int(budget * random.uniform(1.1, 2))}元
+其中：{random.choice(['一半花在了吃上', '一半花在了住上', '一半花在了奶茶上', '一半花在了门票上'])}
+剩下的：不知道花在哪了。
+
+【感悟】：
+旅行的意义不在于目的地，
+而在于——
+你在路上遇到的{random.choice(['坑', '人', '美食', '意外'])}。
+
+{city}{title}，下次见！
+（如果还有下次的话）""",
+    ]
+    
+    content = random.choice(templates)
+    return {"title": f"{city}{title}吐槽实录", "content": content, "type": "humorous"}
+
+
+def _generate_literary(context: dict) -> dict:
+    title = context.get("title", "远方")
+    city = context.get("city", "")
+    scenic_type = context.get("type", "风景")
+    days = context.get("days", 3)
+    
+    scenic_data = _get_scenic_data(title, scenic_type)
+    history = scenic_data.get("history", "")
+    highlights = scenic_data.get("highlights", [])
+    icon = scenic_data.get("icon", "📍")
+    
+    templates = [
+        f"""📖 《{city}{title}》—— 一次漫无目的的漫游
+
+我常常想，旅行到底是为了什么。
+
+是为了看那些明信片上的风景？
+是为了在朋友圈打卡炫耀？
+还是为了逃离日复一日的生活？
+
+这个{random.choice(['春天', '夏天', '秋天', '冬天'])}，
+我来到了{city}，
+遇见了{title}。
+
+{history[:120] if history else f'{title}，像是被时光遗忘的角落'}
+
+{icon} 在这里，
+时间似乎慢了下来。
+{random.choice(['阳光穿过树叶的缝隙', '微风拂过水面', '老墙上爬满了藤蔓', '街角传来悠扬的琴声'])}
+
+我开始明白，
+旅行的意义，
+或许从来不是到达某个目的地，
+而是——
+在某条不知名的小巷里迷路，
+在某家意外的咖啡店里坐一下午，
+在某个陌生人的笑容里，
+看见自己。
+
+{highlights[0] if highlights else '那一刻，我想留住这个瞬间'}
+
+人生短暂，
+世界辽阔。
+愿你也能找到，
+让你愿意停下来的那个地方。
+
+—— 一个{city}的过客""",
+
+        f"""🌿 在{city}{title}发呆的日子
+
+如果可以，
+我想在{title}待上整整一个月。
+
+不赶时间，
+不查攻略，
+不拍照打卡。
+
+只是发呆。
+
+看{random.choice(['云怎么飘', '水怎么流', '人怎么走', '树叶怎么落'])}，
+听{random.choice(['风的声音', '鸟的叫声', '远处的钟声', '隔壁的钢琴声'])}，
+闻{random.choice(['花香', '咖啡香', '雨后泥土的味道', '街边小吃的香味'])}。
+
+{history[:100] if history else '这里的一切，都让我感到安心'}
+
+我开始相信，
+有些地方，
+是为了让你慢下来而存在的。
+
+{highlights[0] if highlights else '慢下来，才能看见真正的美'}
+
+城市的生活太快了，
+快到我们忘了怎么呼吸。
+
+而在这里，
+呼吸变得简单，
+心跳变得缓慢，
+连时间，
+都变得温柔。
+
+如果你累了，
+就来{city}{title}吧。
+
+什么都不做，
+只是待着。""",
+
+        f"""🎨 {city}·{title}·印象派
+
+我不是画家，
+但我想用文字，
+画一幅关于{title}的画。
+
+背景是{random.choice(['湛蓝的天空', '灰白的云朵', '翠绿的山峦', '金色的麦田'])}，
+中间是{highlights[0] if highlights else title}，
+前景是{random.choice(['几个悠闲的路人', '一只懒洋洋的猫', '一杯冒着热气的茶', '一本翻开的书'])}。
+
+{history[:80] if history else '这幅画，画了很多年'}
+
+笔触是随意的，
+色彩是明亮的，
+线条是温柔的。
+
+就像{city}给我的感觉——
+不刻意，
+不拥挤，
+刚刚好。
+
+我想，
+好的旅行，
+就像好的画一样，
+不在于画了什么，
+而在于——
+看画的人，
+看见了什么。
+
+在{title}的这些天，
+我看见了{random.choice(['平静', '美好', '自己', '未来'])}。
+
+愿你也能看见。""",
+    ]
+    
+    content = random.choice(templates)
+    return {"title": f"{city}{title}·文艺随笔", "content": content, "type": "literary"}
+
+
+def _generate_epic(context: dict) -> dict:
+    title = context.get("title", "远方")
+    city = context.get("city", "")
+    scenic_type = context.get("type", "风景")
+    days = context.get("days", 3)
+    
+    scenic_data = _get_scenic_data(title, scenic_type)
+    history = scenic_data.get("history", "")
+    highlights = scenic_data.get("highlights", [])
+    
+    templates = [
+        f"""⚔️ {city}{title}·征服之旅
+
+【序章】
+
+公元{random.randint(2020, 2025)}年，
+一个勇敢的旅人，
+踏上了征服{city}{title}的征程。
+
+没有人告诉他前方有什么，
+没有地图，
+没有攻略，
+只有一颗不安分的心。
+
+【第一章：初见】
+
+当{title}第一次出现在眼前，
+旅人惊呆了——
+
+{history[:150] if history else f'{title}，比想象中更加震撼'}
+
+{highlights[0] if highlights else '这就是传说中的{title}吗？'}
+
+那一刻，
+旅途的艰辛，
+都值了。
+
+【第二章：深入】
+
+{days}天的征程，
+旅人走过了{random.choice(['高山', '峡谷', '古城', '荒原'])}，
+穿越了{random.choice(['森林', '河流', '沙漠', '云海'])}，
+经历了{random.choice(['烈日', '暴雨', '迷雾', '星空'])}。
+
+每一步，
+都是一个故事；
+每一个转角，
+都是一次惊喜。
+
+【第三章：感悟】
+
+站在{title}的最高点，
+旅人俯瞰脚下的一切，
+忽然明白——
+
+旅行，
+从来不是为了征服什么，
+而是为了被什么征服。
+
+{highlights[1] if len(highlights) > 1 else '在大自然面前，我们都是孩子'}
+
+【终章】
+
+带着满身的疲惫，
+和满心的回忆，
+旅人踏上了归途。
+
+但他知道，
+有些东西，
+已经永远改变了。
+
+{city}{title}，
+我会回来的。
+
+—— 一个征服者的独白""",
+
+        f"""🏔️ {city}{title}·史诗
+
+这是一个关于勇气、坚持与发现的故事。
+
+很久以前，
+{city}还只是地图上一个模糊的标记，
+{title}，更是鲜为人知的秘境。
+
+直到有一天，
+一群{random.choice(['探险家', '诗人', '画家', '科学家'])}来到这里，
+{history[:100] if history else '他们发现了{title}的美'}
+
+从此以后，
+{title}的名字，
+开始在人间传唱。
+
+{highlights[0] if highlights else '而今天，你也站在了这里'}
+
+你——
+站在{title}的土地上，
+脚下是千年的历史，
+眼前是无尽的风光，
+心中是说不出的感动。
+
+这一刻，
+你不仅是一个游客，
+你也是这段史诗的一部分。
+
+因为——
+每一个来过这里的人，
+都为{title}的故事，
+添上了自己的一笔。
+
+{city}{title}的史诗，
+还在继续。
+
+而你，
+就是下一个章节。""",
+    ]
+    
+    content = random.choice(templates)
+    return {"title": f"{city}{title}·史诗", "content": content, "type": "epic"}
+
+
+def _generate_ancient(context: dict) -> dict:
+    title = context.get("title", "胜景")
+    city = context.get("city", "")
+    scenic_type = context.get("type", "山水")
+    days = context.get("days", 3)
+    
+    scenic_data = _get_scenic_data(title, scenic_type)
+    history = scenic_data.get("history", "")
+    highlights = scenic_data.get("highlights", [])
+    
+    ancient_names = {
+        "北京": "燕京", "上海": "申城", "广州": "羊城", "成都": "锦城",
+        "西安": "长安", "杭州": "临安", "南京": "金陵", "苏州": "姑苏",
+    }
+    
+    ancient_city = ancient_names.get(city, city)
+    
+    templates = [
+        f"""📜 {ancient_city}游记
+
+余自{random.choice(['东', '南', '西', '北'])}而来，
+路经{ancient_city}，造访{title}。
+
+{history[:80] if history else f'{title}者，{city}之胜景也'}
+
+其时正值{random.choice(['阳春三月', '盛夏七月', '金秋九月', '隆冬腊月'])}，
+{random.choice(['百花盛开', '绿树成荫', '枫叶如火', '白雪皑皑'])}，
+蔚为壮观。
+
+{highlights[0] if highlights else '观此景，心旷神怡'}
+
+{days}日之游，
+足迹遍及{random.choice(['山间', '水畔', '古寺', '老街'])}，
+所遇之人，皆淳朴好客；
+所食之物，皆鲜美可口。
+
+临行之际，
+回望{title}，
+心中感慨万千。
+
+古语有云："读万卷书，行万里路。"
+今余方知，
+书中所得，终不如亲见也。
+
+愿后世之人，
+亦能如余，
+亲赴{title}，
+一睹其风采。
+
+—— 游{ancient_city}{title}记""",
+
+        f"""🏯 与{ancient_city}{title}书
+
+某启：
+
+昨日抵{ancient_city}，
+今日游{title}，
+归来已暮，
+灯下执笔，
+以书寄友。
+
+{history[:60] if history else f'{title}之名，久仰之矣'}
+今得亲见，
+果不负所望。
+
+{highlights[0] if highlights else '其景之盛，非笔墨所能形容'}
+
+此地{random.choice(['山清水秀', '人杰地灵', '物华天宝', '钟灵毓秀'])}，
+{random.choice(['古刹林立', '商贾云集', '文人荟萃', '百姓安居'])}。
+
+余尝谓：
+"天地有大美而不言。"
+今于{title}见之矣。
+
+{days}日之游，
+虽走马观花，
+然已觉收获颇丰。
+若得半月之闲，
+当更深入寻访，
+以记其详。
+
+书不尽言，
+容当后叙。
+
+某顿首
+{random.choice(['吉日', '良辰', '晴日', '雨夜'])}""",
+
+        f"""🎋 {ancient_city}{title}·赋
+
+维{random.choice(['岁月悠悠', '时光荏苒', '星移斗转', '沧海桑田'])}，
+{ancient_city}之{title}，
+矗立于{random.choice(['天地之间', '山水之畔', '云雾之中', '尘嚣之外'])}。
+
+{history[:80] if history else '其始建于' + random.choice(['秦汉', '唐宋', '明清', '远古'])}
+几经兴废，
+而风采依旧。
+
+观夫{title}之胜：
+{highlights[0] if highlights else '或巍峨壮观，或清幽雅致'}
+{highlights[1] if len(highlights) > 1 else '或巧夺天工，或浑然天成'}
+
+{random.choice(['春有百花', '夏有凉风', '秋有明月', '冬有积雪'])}，
+四时之景不同，
+而乐亦无穷也。
+
+余以{days}日之暂留，
+未能尽览其胜，
+然已觉{random.choice(['心旷神怡', '流连忘返', '叹为观止', '不虚此行'])}。
+
+噫！
+天地之大，
+万物之多，
+而吾生也有涯。
+安得{title}之胜，
+常入吾梦哉？
+
+—— 游{ancient_city}{title}有感""",
+    ]
+    
+    content = random.choice(templates)
+    return {"title": f"{ancient_city}{title}·古风记", "content": content, "type": "ancient"}
+
+
 GENERATORS = {
     "travel_copy": _generate_travel_copy,
     "punch_card": _generate_punch_card,
     "photo_spots": _generate_photo_spots,
+    "poetic": _generate_poetic,
+    "humorous": _generate_humorous,
+    "literary": _generate_literary,
+    "epic": _generate_epic,
+    "ancient": _generate_ancient,
 }
 
 
@@ -1246,3 +1895,155 @@ def get_available_templates() -> list:
         }
         for t in GENERATORS.keys()
     ]
+
+
+async def generate_random_blind_box() -> dict:
+    from app.services.real_city_data import REAL_CITY_DATA
+    from app.services.amap_service import get_city_content_full, geocode_city
+    from app.services.weather_service import get_weather_forecast
+    
+    cities = list(REAL_CITY_DATA.keys())
+    import random
+    random_city = random.choice(cities)
+    city_data = REAL_CITY_DATA[random_city]
+    
+    templates = ["poetic", "humorous", "literary", "epic", "ancient"]
+    random_template = random.choice(templates)
+    
+    real_content = {"attractions": [], "foods": [], "hotels": []}
+    weather_info = None
+    
+    try:
+        real_content = await get_city_content_full(random_city)
+    except Exception as e:
+        pass
+    
+    try:
+        weather_info = await get_weather_forecast(random_city)
+    except Exception as e:
+        pass
+    
+    top_attraction = ""
+    if real_content.get("attractions"):
+        attrs = real_content["attractions"]
+        top_attraction = attrs[0].get("name", "") if isinstance(attrs[0], dict) else str(attrs[0])
+    
+    top_food = ""
+    if real_content.get("foods"):
+        foods = real_content["foods"]
+        top_food = foods[0].get("name", "") if isinstance(foods[0], dict) else str(foods[0])
+    
+    weather_desc = ""
+    if weather_info and weather_info.get("current"):
+        w = weather_info["current"]
+        weather_desc = f"{w.get('weather', '')}，{w.get('temperature', '')}°C"
+    
+    context = {
+        "title": top_attraction or random_city,
+        "city": random_city,
+        "province": city_data.get("province", ""),
+        "type": city_data.get("type", ""),
+        "days": random.randint(1, 5),
+        "weather": weather_desc,
+        "food": top_food,
+        "attraction": top_attraction,
+    }
+    
+    result = await generate_content(random_template, context)
+    
+    return {
+        "city": random_city,
+        "province": city_data.get("province", ""),
+        "type": city_data.get("type", ""),
+        "coords": [city_data.get("lng"), city_data.get("lat")],
+        "content": result.get("data", {}),
+        "template": random_template,
+        "real_data": real_content,
+        "weather": weather_info,
+    }
+
+
+async def generate_recommendations(city: str, count: int = 5) -> list:
+    from app.services.real_city_data import REAL_CITY_DATA
+    from app.services.amap_service import get_city_content_full
+    from app.services.weather_service import get_weather_forecast
+    
+    if city not in REAL_CITY_DATA:
+        return []
+    
+    city_data = REAL_CITY_DATA[city]
+    city_type = city_data.get("type", "")
+    province = city_data.get("province", "")
+    
+    import random
+    
+    if city_type == "地级市":
+        same_province = [name for name, data in REAL_CITY_DATA.items() 
+                        if data.get("province") == province and data.get("type") == "地级市" and name != city]
+        if len(same_province) >= count:
+            recommendations = random.sample(same_province, count)
+        else:
+            other_cities = [name for name, data in REAL_CITY_DATA.items() 
+                          if data.get("type") == "地级市" and name != city]
+            random.shuffle(other_cities)
+            recommendations = same_province + other_cities[:count - len(same_province)]
+    else:
+        all_cities = [name for name, data in REAL_CITY_DATA.items() if name != city]
+        recommendations = random.sample(all_cities, min(count, len(all_cities)))
+    
+    result = []
+    for rec_city in recommendations:
+        rec_data = REAL_CITY_DATA[rec_city]
+        templates = ["poetic", "humorous"]
+        random_template = random.choice(templates)
+        
+        real_content = {"attractions": [], "foods": [], "hotels": []}
+        weather_info = None
+        
+        try:
+            real_content = await get_city_content_full(rec_city)
+        except Exception as e:
+            pass
+        
+        try:
+            weather_info = await get_weather_forecast(rec_city)
+        except Exception as e:
+            pass
+        
+        top_attraction = ""
+        if real_content.get("attractions"):
+            attrs = real_content["attractions"]
+            top_attraction = attrs[0].get("name", "") if isinstance(attrs[0], dict) else str(attrs[0])
+        
+        top_food = ""
+        if real_content.get("foods"):
+            foods = real_content["foods"]
+            top_food = foods[0].get("name", "") if isinstance(foods[0], dict) else str(foods[0])
+        
+        weather_desc = ""
+        if weather_info and weather_info.get("current"):
+            w = weather_info["current"]
+            weather_desc = f"{w.get('weather', '')}，{w.get('temperature', '')}°C"
+        
+        context = {
+            "title": top_attraction or rec_city,
+            "city": rec_city,
+            "province": rec_data.get("province", ""),
+            "type": rec_data.get("type", ""),
+            "days": random.randint(1, 3),
+            "weather": weather_desc,
+            "food": top_food,
+            "attraction": top_attraction,
+        }
+        content = await generate_content(random_template, context)
+        result.append({
+            "city": rec_city,
+            "province": rec_data.get("province", ""),
+            "type": rec_data.get("type", ""),
+            "coords": [rec_data.get("lng"), rec_data.get("lat")],
+            "content": content.get("data", {}),
+            "real_data": real_content,
+            "weather": weather_info,
+        })
+    
+    return result
