@@ -7,7 +7,8 @@ from app.services.multi_city_service import (
     generate_city_data,
     get_city_all_attractions,
     get_city_all_food,
-    get_city_info_data
+    get_city_info_data,
+    fetch_city_real_data
 )
 from app.services.city_database import (
     CITY_BASIC_INFO, MASS_CITY_INFO, MEGA_CITY_INFO,
@@ -161,3 +162,47 @@ async def get_city_detail_multi(city: str):
         "city": city,
         "data": city_data
     }
+
+
+@router.get("/real-poi/{city}", summary="获取城市真实POI数据(来自高德地图)")
+async def get_real_poi(city: str):
+    """
+    从高德地图获取城市的真实景点和美食数据
+    """
+    try:
+        real_data = await fetch_city_real_data(city)
+        
+        if real_data and real_data.get('attractions'):
+            return {
+                "success": True,
+                "city": city,
+                "source": "amap",
+                "attractions": real_data.get('attractions', []),
+                "foods": real_data.get('food', []),
+                "transport": real_data.get('transport', ''),
+                "tips": real_data.get('tips', ''),
+                "total_attractions": len(real_data.get('attractions', [])),
+                "total_foods": len(real_data.get('food', []))
+            }
+        else:
+            static_data = get_city_info_data(city)
+            return {
+                "success": True,
+                "city": city,
+                "source": "static",
+                "attractions": static_data.get('attractions', []),
+                "foods": static_data.get('food', []),
+                "transport": static_data.get('transport', ''),
+                "tips": static_data.get('tips', ''),
+                "total_attractions": len(static_data.get('attractions', [])),
+                "total_foods": len(static_data.get('food', []))
+            }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "city": city,
+            "error": str(e),
+            "message": f"获取真实数据失败: {str(e)}"
+        }

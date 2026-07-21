@@ -8,6 +8,93 @@ from app.services.city_database import (
     MASS_CITY_INFO, MEGA_CITY_INFO, EXTENDED_CITY_BASIC_INFO
 )
 
+_amap_cache = {}
+
+async def fetch_city_real_data(city: str) -> dict:
+    """异步获取城市真实POI数据"""
+    cache_key = f"real_data_{city}"
+    if cache_key in _amap_cache:
+        return _amap_cache[cache_key]
+    
+    normalized_city = normalize_city_name(city)
+    
+    if normalized_city in CITY_STATIC_DATA:
+        return CITY_STATIC_DATA[normalized_city]
+    
+    try:
+        from app.services.amap_service import search_attractions, search_foods
+        
+        attractions_pois, foods_pois = await asyncio.gather(
+            search_attractions(normalized_city, limit=15),
+            search_foods(normalized_city, limit=10),
+            return_exceptions=True
+        )
+        
+        if isinstance(attractions_pois, Exception):
+            attractions_pois = []
+        if isinstance(foods_pois, Exception):
+            foods_pois = []
+        
+        attractions = []
+        for poi in attractions_pois[:10]:
+            if poi.get('name'):
+                base_hour = 8 + len(attractions) * 2
+                if base_hour > 16:
+                    base_hour = 16
+                attractions.append({
+                    'name': poi['name'],
+                    'address': poi.get('address', ''),
+                    'start_time': f"{base_hour:02d}:00",
+                    'duration_hours': 2,
+                    'best_period': 'morning' if base_hour < 12 else ('afternoon' if base_hour < 18 else 'evening'),
+                    'ticket': f"{int(poi.get('cost', 0) * 20) if poi.get('cost') else '未知'}元",
+                    'rating': int(poi.get('rating', 0) * 10) / 2 if poi.get('rating') else 4,
+                    'tags': ['高德推荐'],
+                    'tips': f"来自高德地图的真实推荐：{poi.get('address', '')}",
+                    'source': 'amap',
+                    'is_real': True
+                })
+        
+        foods = []
+        for poi in foods_pois[:8]:
+            if poi.get('name'):
+                foods.append({
+                    'name': poi['name'],
+                    'location': poi.get('address', ''),
+                    'price_range': f"{int(poi.get('cost', 0) * 30)}-{int(poi.get('cost', 0) * 80)}元" if poi.get('cost') else '50-100元',
+                    'recommend': poi.get('type', '特色美食'),
+                    'type': '高德推荐',
+                    'rating': int(poi.get('rating', 0) * 10) / 2 if poi.get('rating') else 4,
+                    'source': 'amap',
+                    'is_real': True
+                })
+        
+        if attractions or foods:
+            city_data = {
+                'attractions': attractions,
+                'food': foods,
+                'transport': f"{normalized_city}的公共交通便利，建议使用当地交通APP或打车",
+                'tips': f"以上数据来自高德地图真实POI，共{len(attractions)}个景点和{len(foods)}个美食",
+                'is_real': True,
+                'source': 'amap'
+            }
+            _amap_cache[cache_key] = city_data
+            return city_data
+            
+    except ImportError:
+        pass
+    except Exception as e:
+        print(f"获取{normalized_city}真实数据失败: {e}")
+    
+    return None
+
+def get_real_attractions_sync(city: str) -> list:
+    """同步获取真实景点数据（如果已缓存）"""
+    cache_key = f"real_data_{city}"
+    if cache_key in _amap_cache:
+        return _amap_cache[cache_key].get('attractions', [])
+    return None
+
 
 def normalize_city_name(city: str) -> str:
     """规范化城市名称，处理'市'、'省'、'特别行政区'等后缀"""
@@ -625,15 +712,23 @@ def get_city_food(city: str) -> list:
 def get_city_info_data(city: str) -> dict:
     city = normalize_city_name(city)
     
-    # 优先使用真实数据
+    # 优先使用高德缓存的真实数据
+    cache_key = f"real_data_{city}"
+    if cache_key in _amap_cache:
+        print(f"  使用高德缓存数据: {city}")
+        return _amap_cache[cache_key]
+    
+    # 使用预置的真实数据
     try:
         from app.services.real_city_data import REAL_CITY_ATTRACTIONS
         if city in REAL_CITY_ATTRACTIONS:
+            print(f"  使用预置真实数据: {city}")
             return REAL_CITY_ATTRACTIONS[city]
     except ImportError:
         pass
     
     if city in CITY_STATIC_DATA:
+        print(f"  使用静态数据: {city}")
         return CITY_STATIC_DATA[city]
     
     city_info = {}
@@ -975,6 +1070,25 @@ async def generate_multi_city_itinerary(cities: list, day_allocation: list,
         user_attractions = user_attractions or {}
         budget_per_day = budget / total_days if total_days > 0 else budget
         
+        # 异步获取所有城市的真实POI数据
+        print(f"开始获取 {len(cities)} 个城市的真实POI数据...")
+        real_data_results = await asyncio.gather(
+            *[fetch_city_real_data(city) for city in cities],
+            return_exceptions=True
+        )
+        
+        city_real_data = {}
+        for i, city in enumerate(cities):
+            result = real_data_results[i]
+            if isinstance(result, Exception):
+                print(f"获取 {city} 真实数据失败: {result}")
+                result = None
+            if result:
+                city_real_data[city] = result
+                print(f"✓ {city}: 获取到 {len(result.get('attractions', []))} 个景点, {len(result.get('food', []))} 个美食")
+            else:
+                print(f"✗ {city}: 使用备用数据")
+        
         days_schedule = []
         transfer_segments = []
         day_counter = 1
@@ -986,7 +1100,14 @@ async def generate_multi_city_itinerary(cities: list, day_allocation: list,
             
             user_selected = user_attractions.get(city, [])
             
-            city_attractions = get_city_attractions(city)
+            # 优先使用真实数据
+            real_data = city_real_data.get(city)
+            if real_data and real_data.get('attractions'):
+                city_attractions = real_data['attractions']
+                print(f"  → {city}: 使用真实POI数据 ({len(city_attractions)} 个景点)")
+            else:
+                city_attractions = get_city_attractions(city)
+            
             city_budget = estimate_city_budget(city, city_days, budget_per_day, city_attractions)
             city_budgets[city] = city_budget
             
