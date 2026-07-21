@@ -48,15 +48,13 @@ export default function AiGenerateButton({
     }
 
     try {
-      const response = await generateAIContent(templateType, context)
-      const data = response.data || response
+      const data = await generateAIContent(templateType, context)
       
       if (data.success !== false) {
-        const resultData = data.data || data
-        setResult(resultData)
-        setAICache(cacheKey, resultData)
+        setResult(data)
+        setAICache(cacheKey, data)
         setShowModal(true)
-        if (onGenerate) onGenerate(resultData)
+        if (onGenerate) onGenerate(data)
       } else {
         message.error(data.error || '生成失败')
       }

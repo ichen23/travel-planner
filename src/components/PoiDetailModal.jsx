@@ -138,9 +138,9 @@ const PoiDetailModal = ({ visible, poi, onClose, nestedMode = false, onOpenNeste
       const response = await generateAIContent(templateType, contextData)
       console.log('AI生成响应:', response)
       
-      if (response && response.success && response.data && response.data.content) {
-        setAiResult(response.data)
-        setAICache(cacheKey, response.data)
+      if (response && response.success && response.content) {
+        setAiResult(response)
+        setAICache(cacheKey, response)
       } else {
         const errorMsg = response?.error || '生成内容为空，请重试'
         console.error('AI生成失败:', errorMsg, response)

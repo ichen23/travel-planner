@@ -39,9 +39,9 @@ export default function CitySearch({ onSelectCity, placeholder = '搜索城市�
       setLoading(true)
       setHasSearched(true)
       try {
-        const response = await searchCities(keyword.trim(), 20, 'all')
-        if (response.data.success) {
-          setResults(response.data.results || [])
+        const data = await searchCities(keyword.trim(), 20, 'all')
+        if (data.success) {
+          setResults(data.results || [])
         } else {
           setResults([])
         }
