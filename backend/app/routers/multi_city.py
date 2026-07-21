@@ -1,7 +1,14 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
-from app.services.multi_city_service import generate_multi_city_itinerary, get_train_info, generate_city_data
+from app.services.multi_city_service import (
+    generate_multi_city_itinerary, 
+    get_train_info, 
+    generate_city_data,
+    get_city_all_attractions,
+    get_city_all_food,
+    get_city_info_data
+)
 from app.services.city_database import (
     CITY_BASIC_INFO, MASS_CITY_INFO, MEGA_CITY_INFO,
     EXTENDED_CITY_BASIC_INFO, ALL_CITY_COORDS
@@ -21,6 +28,7 @@ class MultiCityRequest(BaseModel):
     total_days: int
     budget: float
     preference: str = ""
+    user_attractions: Optional[Dict[str, List[str]]] = None
 
 
 @router.post("/generate", summary="生成多城市详细行程")
@@ -39,7 +47,8 @@ async def generate_multi_city(request: MultiCityRequest):
         cities=request.cities,
         day_allocation=day_allocation,
         budget=request.budget,
-        preference=request.preference
+        preference=request.preference,
+        user_attractions=request.user_attractions
     )
     
     if not result.get("success"):
@@ -87,6 +96,24 @@ async def get_supported_cities():
     }
 
 
+@router.get("/city-attractions/{city}", summary="获取城市的景点列表")
+async def get_city_attractions(city: str):
+    attractions = get_city_all_attractions(city)
+    foods = get_city_all_food(city)
+    
+    if not attractions and city not in ALL_CITY_COORDS:
+        return {"success": False, "message": f"未找到城市 {city} 的景点数据"}
+    
+    return {
+        "success": True,
+        "city": city,
+        "attractions": attractions,
+        "foods": foods,
+        "total_attractions": len(attractions),
+        "total_foods": len(foods)
+    }
+
+
 @router.get("/train-info/{from_city}/{to_city}", summary="获取两城市间的高铁信息")
 async def get_train_info_route(from_city: str, to_city: str):
     train = get_train_info(from_city, to_city)
@@ -115,7 +142,8 @@ async def quick_plan(request: MultiCityRequest):
         cities=request.cities,
         day_allocation=day_allocation,
         budget=request.budget,
-        preference=request.preference
+        preference=request.preference,
+        user_attractions=request.user_attractions
     )
     
     return result

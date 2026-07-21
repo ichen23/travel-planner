@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   Card, Row, Col, Button, InputNumber, Select, Space, Typography,
   List, Tag, Divider, Steps, Alert, Empty, Spin, Progress, message,
-  Modal, Timeline, Tooltip, Badge, Statistic
+  Modal, Timeline, Tooltip, Badge, Statistic, Checkbox, Input
 } from 'antd'
 import {
   PlusOutlined, DeleteOutlined, ArrowUpOutlined, ArrowDownOutlined,
@@ -10,10 +10,10 @@ import {
   ClockCircleOutlined, CarOutlined, StarOutlined, HomeOutlined,
   CheckCircleOutlined, InfoCircleOutlined, ShoppingOutlined,
   CopyOutlined, PrinterOutlined, ShareAltOutlined,
-  SwapOutlined, TeamOutlined
+  SwapOutlined, TeamOutlined, FilterOutlined, HeartOutlined
 } from '@ant-design/icons'
 import {
-  getMultiCityCities, generateMultiCityItinerary, getTrainInfo
+  getMultiCityCities, generateMultiCityItinerary, getTrainInfo, getCityAttractions
 } from '../services/multiCityService'
 
 const { Text, Title } = Typography
@@ -33,6 +33,13 @@ export default function MultiCityPlanner() {
   const [generating, setGenerating] = useState(false)
   const [result, setResult] = useState(null)
   const [showPacking, setShowPacking] = useState(false)
+  
+  const [userSelectedAttractions, setUserSelectedAttractions] = useState({})
+  const [showAttractionModal, setShowAttractionModal] = useState(false)
+  const [modalCity, setModalCity] = useState('')
+  const [modalAttractions, setModalAttractions] = useState([])
+  const [loadingAttractions, setLoadingAttractions] = useState(false)
+  const [tempSelectedAttractions, setTempSelectedAttractions] = useState([])
 
   useEffect(() => {
     loadAvailableCities()
@@ -51,6 +58,51 @@ export default function MultiCityPlanner() {
     } finally {
       setLoadingCities(false)
     }
+  }
+
+  const handleShowAttractionSelector = async (cityName) => {
+    if (!cityName) {
+      message.warning('请先选择城市')
+      return
+    }
+    
+    setModalCity(cityName)
+    setLoadingAttractions(true)
+    setShowAttractionModal(true)
+    setTempSelectedAttractions(userSelectedAttractions[cityName] || [])
+    
+    try {
+      const response = await getCityAttractions(cityName)
+      if (response.success) {
+        setModalAttractions(response.attractions || [])
+      } else {
+        setModalAttractions([])
+      }
+    } catch (error) {
+      message.error('加载景点列表失败')
+      setModalAttractions([])
+    } finally {
+      setLoadingAttractions(false)
+    }
+  }
+
+  const handleSaveAttractions = () => {
+    setUserSelectedAttractions(prev => ({
+      ...prev,
+      [modalCity]: tempSelectedAttractions
+    }))
+    setShowAttractionModal(false)
+    message.success(`已为${modalCity}选择${tempSelectedAttractions.length}个景点`)
+  }
+
+  const handleAttractionToggle = (attractionName) => {
+    setTempSelectedAttractions(prev => {
+      if (prev.includes(attractionName)) {
+        return prev.filter(name => name !== attractionName)
+      } else {
+        return [...prev, attractionName]
+      }
+    })
   }
 
   const getCityOptions = (excludeCities = []) => {
@@ -78,21 +130,41 @@ export default function MultiCityPlanner() {
       message.warning('至少需要保留一个城市')
       return
     }
+    const cityName = selectedCities[index]?.name
+    if (cityName && userSelectedAttractions[cityName]) {
+      setUserSelectedAttractions(prev => {
+        const newSelected = { ...prev }
+        delete newSelected[cityName]
+        return newSelected
+      })
+    }
     setSelectedCities(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleCityChange = (index, newCity) => {
+    const oldCity = selectedCities[index]?.name
     setSelectedCities(prev => {
       const newCities = [...prev]
       newCities[index] = { ...newCities[index], name: newCity }
       return newCities
     })
+    
+    if (oldCity && userSelectedAttractions[oldCity]) {
+      setUserSelectedAttractions(prev => {
+        const newSelected = { ...prev }
+        if (newCity !== oldCity) {
+          delete newSelected[oldCity]
+        }
+        return newSelected
+      })
+    }
   }
 
   const handleDaysChange = (index, newDays) => {
     setSelectedCities(prev => {
       const newCities = [...prev]
       newCities[index] = { ...newCities[index], days: Math.max(1, newDays) }
+      updateTotalDays(newCities)
       return newCities
     })
   }
@@ -141,12 +213,20 @@ export default function MultiCityPlanner() {
 
     setGenerating(true)
     try {
+      const validUserAttractions = {}
+      Object.entries(userSelectedAttractions).forEach(([city, attractions]) => {
+        if (cityNames.includes(city) && attractions.length > 0) {
+          validUserAttractions[city] = attractions
+        }
+      })
+
       const response = await generateMultiCityItinerary(
         cityNames,
         dayAllocation,
         totalDays,
         budget,
-        preference
+        preference,
+        Object.keys(validUserAttractions).length > 0 ? validUserAttractions : null
       )
 
       if (response.success) {
@@ -246,87 +326,101 @@ export default function MultiCityPlanner() {
               💡 提示：可以通过输入城市名称或省份来快速搜索，如"杭州"或"浙江"
             </div>
             
-            {selectedCities.map((city, index) => (
-              <div
-                key={index}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '12px 16px',
-                  background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-                  borderRadius: 12,
-                  border: '2px solid transparent',
-                  borderColor: index === 0 ? '#1890ff' : index === selectedCities.length - 1 ? '#52c41a' : '#faad14',
-                }}
-              >
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#666', minWidth: 30 }}>
-                  {index + 1}
-                </div>
-                
-                <Select
-                  value={city.name || undefined}
-                  onChange={(val) => handleCityChange(index, val)}
-                  style={{ flex: 1, minWidth: 200 }}
-                  showSearch
-                  placeholder="搜索城市名称或省份..."
-                  filterOption={(input, option) => {
-                    const searchVal = option.searchValue || ''
-                    return searchVal.toLowerCase().includes(input.toLowerCase())
+            {selectedCities.map((city, index) => {
+              const selectedCount = userSelectedAttractions[city.name]?.length || 0
+              return (
+                <div
+                  key={index}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '12px 16px',
+                    background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                    borderRadius: 12,
+                    border: '2px solid transparent',
+                    borderColor: index === 0 ? '#1890ff' : index === selectedCities.length - 1 ? '#52c41a' : '#faad14',
                   }}
-                  optionFilterProp="searchValue"
-                  listHeight={300}
-                  virtual={false}
                 >
-                  {cityOptions.map(c => (
-                    <Select.Option 
-                      key={c.value} 
-                      value={c.value}
-                      searchValue={c.searchValue}
+                  <div style={{ fontSize: 24, fontWeight: 'bold', color: '#666', minWidth: 30 }}>
+                    {index + 1}
+                  </div>
+                  
+                  <Select
+                    value={city.name || undefined}
+                    onChange={(val) => handleCityChange(index, val)}
+                    style={{ flex: 1, minWidth: 200 }}
+                    showSearch
+                    placeholder="搜索城市名称或省份..."
+                    filterOption={(input, option) => {
+                      const searchVal = option.searchValue || ''
+                      return searchVal.toLowerCase().includes(input.toLowerCase())
+                    }}
+                    optionFilterProp="searchValue"
+                    listHeight={300}
+                    virtual={false}
+                  >
+                    {cityOptions.map(c => (
+                      <Select.Option 
+                        key={c.value} 
+                        value={c.value}
+                        searchValue={c.searchValue}
+                      >
+                        {c.label}
+                      </Select.Option>
+                    ))}
+                  </Select>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <CalendarOutlined style={{ color: '#1890ff' }} />
+                    <InputNumber
+                      min={1}
+                      max={10}
+                      value={city.days}
+                      onChange={(val) => handleDaysChange(index, val)}
+                      addonAfter="天"
+                      style={{ width: 100 }}
+                    />
+                  </div>
+
+                  <Tooltip title={city.name ? "选择必去景点" : "请先选择城市"}>
+                    <Button 
+                      icon={<HeartOutlined />}
+                      onClick={() => handleShowAttractionSelector(city.name)}
+                      disabled={!city.name}
+                      type={selectedCount > 0 ? "primary" : "default"}
                     >
-                      {c.label}
-                    </Select.Option>
-                  ))}
-                </Select>
+                      {selectedCount > 0 ? `已选${selectedCount}个` : "选景点"}
+                    </Button>
+                  </Tooltip>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <CalendarOutlined style={{ color: '#1890ff' }} />
-                  <InputNumber
-                    min={1}
-                    max={10}
-                    value={city.days}
-                    onChange={(val) => handleDaysChange(index, val)}
-                    addonAfter="天"
-                    style={{ width: 100 }}
-                  />
+                  <Space>
+                    <Tooltip title="上移">
+                      <Button 
+                        icon={<ArrowUpOutlined />} 
+                        onClick={() => handleMoveUp(index)}
+                        disabled={index === 0}
+                      />
+                    </Tooltip>
+                    <Tooltip title="下移">
+                      <Button 
+                        icon={<ArrowDownOutlined />} 
+                        onClick={() => handleMoveDown(index)}
+                        disabled={index === selectedCities.length - 1}
+                      />
+                    </Tooltip>
+                    <Tooltip title="删除">
+                      <Button 
+                        danger 
+                        icon={<DeleteOutlined />} 
+                        onClick={() => handleRemoveCity(index)}
+                        disabled={selectedCities.length <= 1}
+                      />
+                    </Tooltip>
+                  </Space>
                 </div>
-
-                <Space>
-                  <Tooltip title="上移">
-                    <Button 
-                      icon={<ArrowUpOutlined />} 
-                      onClick={() => handleMoveUp(index)}
-                      disabled={index === 0}
-                    />
-                  </Tooltip>
-                  <Tooltip title="下移">
-                    <Button 
-                      icon={<ArrowDownOutlined />} 
-                      onClick={() => handleMoveDown(index)}
-                      disabled={index === selectedCities.length - 1}
-                    />
-                  </Tooltip>
-                  <Tooltip title="删除">
-                    <Button 
-                      danger 
-                      icon={<DeleteOutlined />} 
-                      onClick={() => handleRemoveCity(index)}
-                      disabled={selectedCities.length <= 1}
-                    />
-                  </Tooltip>
-                </Space>
-              </div>
-            ))}
+              )
+            })}
 
             {selectedCities.length === 0 && (
               <Empty 
@@ -339,6 +433,105 @@ export default function MultiCityPlanner() {
       </Card>
     )
   }
+
+  const renderAttractionModal = () => (
+    <Modal
+      title={
+        <Space>
+          <HeartOutlined />
+          <span>为 {modalCity} 选择必去景点</span>
+        </Space>
+      }
+      open={showAttractionModal}
+      onCancel={() => setShowAttractionModal(false)}
+      onOk={handleSaveAttractions}
+      okText="保存选择"
+      cancelText="取消"
+      width={600}
+    >
+      {loadingAttractions ? (
+        <div style={{ textAlign: 'center', padding: 40 }}>
+          <Spin />
+          <div style={{ marginTop: 16 }}>加载景点列表中...</div>
+        </div>
+      ) : modalAttractions.length === 0 ? (
+        <Alert
+          message="暂无景点数据"
+          description="该城市暂无详细景点数据，系统将为您智能推荐"
+          type="info"
+          showIcon
+        />
+      ) : (
+        <div>
+          <div style={{ marginBottom: 16 }}>
+            <Alert
+              message="提示：选择您感兴趣的景点，系统会将这些景点安排到行程中，其他时间会自动安排美食和交通"
+              type="info"
+              showIcon
+            />
+          </div>
+          
+          <div style={{ marginBottom: 12 }}>
+            <Text strong>已选择 {tempSelectedAttractions.length} 个景点</Text>
+          </div>
+          
+          <List
+            size="small"
+            dataSource={modalAttractions}
+            renderItem={(attraction) => {
+              const isSelected = tempSelectedAttractions.includes(attraction.name)
+              return (
+                <List.Item>
+                  <Checkbox
+                    checked={isSelected}
+                    onChange={() => handleAttractionToggle(attraction.name)}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <Text strong>
+                        {attraction.name}
+                        {attraction.rating && (
+                          <StarOutlined style={{ color: '#faad14', marginLeft: 8 }} />
+                        )}
+                      </Text>
+                      <div style={{ fontSize: 12, color: '#666' }}>
+                        {attraction.ticket && attraction.ticket !== '免费' && (
+                          <Tag color="orange">¥{attraction.ticket}</Tag>
+                        )}
+                        {attraction.ticket === '免费' && (
+                          <Tag color="green">免费</Tag>
+                        )}
+                        {attraction.best_period && (
+                          <Tag color="blue">
+                            {attraction.best_period === 'morning' ? '上午' : 
+                             attraction.best_period === 'afternoon' ? '下午' : '晚上'}
+                          </Tag>
+                        )}
+                        {attraction.duration_hours && (
+                          <Tag>{attraction.duration_hours}小时</Tag>
+                        )}
+                      </div>
+                      {attraction.tags && attraction.tags.length > 0 && (
+                        <div style={{ marginTop: 4 }}>
+                          {attraction.tags.map(tag => (
+                            <Tag key={tag} style={{ marginBottom: 2 }}>{tag}</Tag>
+                          ))}
+                        </div>
+                      )}
+                      {attraction.tips && (
+                        <div style={{ fontSize: 12, color: '#999', marginTop: 2 }}>
+                          💡 {attraction.tips}
+                        </div>
+                      )}
+                    </div>
+                  </Checkbox>
+                </List.Item>
+              )
+            }}
+          />
+        </div>
+      )}
+    </Modal>
+  )
 
   const renderSettingsPanel = () => (
     <Card 
@@ -384,6 +577,35 @@ export default function MultiCityPlanner() {
           </div>
         </Col>
       </Row>
+      
+      {Object.keys(userSelectedAttractions).length > 0 && (
+        <>
+          <Divider />
+          <Alert
+            message={
+              <Space>
+                <HeartOutlined style={{ color: '#ff4d4f' }} />
+                <span>已为以下城市选择必去景点:</span>
+              </Space>
+            }
+            description={
+              <div>
+                {Object.entries(userSelectedAttractions).map(([city, attractions]) => (
+                  <div key={city} style={{ marginBottom: 4 }}>
+                    <Tag color="blue">{city}</Tag>
+                    <span style={{ marginLeft: 8 }}>
+                      {attractions.join('、')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            }
+            type="info"
+            showIcon={false}
+            style={{ marginBottom: 16 }}
+          />
+        </>
+      )}
       
       <Divider />
       
@@ -471,6 +693,7 @@ export default function MultiCityPlanner() {
           />
           <Title level={4} style={{ margin: 0 }}>{day.city}</Title>
           <Tag color="blue">{day.date_label}</Tag>
+          {day.is_transfer_day && <Tag color="orange">中转日</Tag>}
         </Space>
       }
     >
@@ -493,11 +716,17 @@ export default function MultiCityPlanner() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <ClockCircleOutlined style={{ color: '#666' }} />
                 <Text strong>{item.start_time} - {item.end_time}</Text>
+                {item.duration_minutes && (
+                  <Tag color="default">{item.duration_minutes}分钟</Tag>
+                )}
                 {item.ticket && item.ticket !== '免费' && (
                   <Tag color="orange">💰 {item.ticket}</Tag>
                 )}
                 {item.ticket === '免费' && (
                   <Tag color="green">🎉 免费</Tag>
+                )}
+                {item.rating && item.rating >= 4 && (
+                  <Tag color="gold">⭐ {item.rating}</Tag>
                 )}
               </div>
               
@@ -514,6 +743,14 @@ export default function MultiCityPlanner() {
               {item.recommend && (
                 <div style={{ color: '#1890ff', fontSize: 14, marginTop: 4 }}>
                   推荐: {item.recommend}
+                </div>
+              )}
+              
+              {item.tags && item.tags.length > 0 && (
+                <div style={{ marginTop: 4 }}>
+                  {item.tags.map(tag => (
+                    <Tag key={tag} style={{ marginBottom: 2 }}>{tag}</Tag>
+                  ))}
                 </div>
               )}
               
@@ -584,14 +821,24 @@ export default function MultiCityPlanner() {
       
       <Title level={5}>各城市预算分配</Title>
       <Row gutter={[16, 16]}>
-        {Object.entries(result.city_budgets || {}).map(([city, budget]) => (
+        {Object.entries(result.city_budgets || {}).map(([city, cityBudget]) => (
           <Col key={city} span={8}>
             <Card size="small" title={city}>
-              <div>门票: ¥{budget.ticket}</div>
-              <div>餐饮: ¥{budget.food}</div>
-              <div>交通: ¥{budget.transport}</div>
+              <div>🎫 门票: ¥{cityBudget.ticket}</div>
+              <div>🍜 餐饮: ¥{cityBudget.food}</div>
+              <div>🚕 交通: ¥{cityBudget.local_transport}</div>
+              {cityBudget.ticket_attractions?.length > 0 && (
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ fontSize: 12, color: '#666' }}>主要门票:</div>
+                  {cityBudget.ticket_attractions.slice(0, 3).map(t => (
+                    <div key={t.name} style={{ fontSize: 12 }}>
+                      - {t.name}: ¥{t.ticket}
+                    </div>
+                  ))}
+                </div>
+              )}
               <div style={{ marginTop: 8, fontWeight: 'bold' }}>
-                合计: ¥{budget.total}
+                合计: ¥{cityBudget.total}
               </div>
             </Card>
           </Col>
@@ -675,7 +922,7 @@ export default function MultiCityPlanner() {
         <SwapOutlined /> 多城市行程规划
       </Title>
       <Text type="secondary">
-        选择多个城市，系统会自动生成包含城市间交通、每日景点安排、预算明细的完整行程
+        选择多个城市，指定必去景点，系统会自动生成包含城市间交通、每日景点安排、美食推荐、预算明细的完整行程
       </Text>
       
       <Divider />
@@ -696,7 +943,7 @@ export default function MultiCityPlanner() {
           <Empty
             description={
               <span style={{ fontSize: 16 }}>
-                选择城市并点击"生成详细行程"开始规划你的旅行！
+                选择城市并点击"生成详细行程"开始规划您的旅行！
               </span>
             }
           />
@@ -752,6 +999,8 @@ export default function MultiCityPlanner() {
           </div>
         )}
       </Modal>
+
+      {renderAttractionModal()}
     </div>
   )
 }
