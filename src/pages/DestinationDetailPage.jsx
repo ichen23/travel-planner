@@ -312,8 +312,8 @@ export default function DestinationDetailPage() {
 
     const temps = forecastData.map(d => ({
       date: d.date || d.day || '',
-      high: d.high || d.temp_max || d.temperature?.max || 0,
-      low: d.low || d.temp_min || d.temperature?.min || 0,
+      high: d.day_temp || d.high || d.temp_max || d.temperature?.max || 0,
+      low: d.night_temp || d.low || d.temp_min || d.temperature?.min || 0,
     }))
 
     const maxHigh = Math.max(...temps.map(t => t.high), 1)
@@ -367,9 +367,9 @@ export default function DestinationDetailPage() {
     }
 
     const today = forecastData[0]
-    const umbrellaTip = getUmbrellaTip(today?.weather || today?.text || '')
-    const sunTip = getSunProtectionTip(today?.weather || today?.text || '', today?.high || today?.temp_max || today?.temperature?.max || 25)
-    const avgTemp = forecastData.reduce((s, d) => s + (d.high || d.temp_max || d.temperature?.max || 20), 0) / forecastData.length
+    const umbrellaTip = getUmbrellaTip(today?.day_weather || today?.weather || today?.text || '')
+    const sunTip = getSunProtectionTip(today?.day_weather || today?.weather || today?.text || '', today?.day_temp || today?.high || today?.temp_max || today?.temperature?.max || 25)
+    const avgTemp = forecastData.reduce((s, d) => s + (d.day_temp || d.high || d.temp_max || d.temperature?.max || 20), 0) / forecastData.length
 
     return (
       <Card
@@ -386,12 +386,12 @@ export default function DestinationDetailPage() {
           <div style={{ display: 'flex', gap: 8, minWidth: 'fit-content', paddingBottom: 8 }}>
             {forecastData.slice(0, 7).map((day, idx) => {
               const isToday = idx === 0
-              const dayOfWeek = isToday ? '今天' : ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][new Date(day.date || day.day).getDay()]
-              const weatherText = day.weather || day.text || day.description || ''
-              const high = day.high || day.temp_max || day.temperature?.max || day.max || 25
-              const low = day.low || day.temp_min || day.temperature?.min || day.min || 15
-              const wind = day.wind_direction || day.wind || ''
-              const windLevel = day.wind_power || day.wind_level || ''
+              const dayOfWeek = isToday ? '今天' : (day.weekday || ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][new Date(day.date || day.day).getDay()])
+              const weatherText = day.day_weather || day.weather || day.text || day.description || ''
+              const high = day.day_temp || day.high || day.temp_max || day.temperature?.max || day.max || 25
+              const low = day.night_temp || day.low || day.temp_min || day.temperature?.min || day.min || 15
+              const wind = day.day_wind || day.wind_direction || day.wind || ''
+              const windLevel = day.day_wind_level || day.wind_power || day.wind_level || ''
 
               return (
                 <div
