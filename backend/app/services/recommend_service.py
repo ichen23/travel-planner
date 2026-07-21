@@ -117,12 +117,30 @@ async def get_city_detail(city: str, use_realtime: bool = True):
     city_info = get_city_info(city)
     
     geo = None
+    province = city_info.get("province", "")
+    parent = city_info.get("parent", "")
+    district = city_info.get("district", "")
+    
     if city in CITY_COORDS:
         geo = {"lng": CITY_COORDS[city][0], "lat": CITY_COORDS[city][1], "name": city}
     elif use_realtime:
         real_geo = await geocode_city(city)
         if real_geo:
-            geo = {"lng": real_geo["lng"], "lat": real_geo["lat"], "name": city}
+            geo = {
+                "lng": real_geo["lng"], 
+                "lat": real_geo["lat"], 
+                "name": real_geo.get("name", city),
+                "province": real_geo.get("province", ""),
+                "city": real_geo.get("city", ""),
+                "district": real_geo.get("district", ""),
+                "adcode": real_geo.get("adcode")
+            }
+            if not province and real_geo.get("province"):
+                province = real_geo["province"]
+            if not parent and real_geo.get("city") and real_geo["city"] != city:
+                parent = real_geo["city"]
+            if not district and real_geo.get("district"):
+                district = real_geo["district"]
     
     high_speed_routes = get_high_speed_routes(city)
     
@@ -180,12 +198,29 @@ async def get_city_detail(city: str, use_realtime: bool = True):
                     "photos": [],
                 })
     
+    final_info = dict(city_info)
+    if not final_info.get("province") and province:
+        final_info["province"] = province
+    if not final_info.get("parent") and parent:
+        final_info["parent"] = parent
+    if not final_info.get("district") and district:
+        final_info["district"] = district
+    
+    full_address_parts = []
+    if final_info.get("province"):
+        full_address_parts.append(final_info["province"])
+    if final_info.get("parent") and final_info["parent"] != final_info.get("name"):
+        full_address_parts.append(final_info["parent"])
+    if final_info.get("district") and final_info["district"] != final_info.get("name"):
+        full_address_parts.append(final_info["district"])
+    final_info["full_address"] = " ".join(full_address_parts) if full_address_parts else ""
+    
     result = {
         "success": True,
-        "city": city_info.get("name", city),
-        "info": city_info,
+        "city": final_info.get("name", city),
+        "info": final_info,
         "geo": geo,
-        "description": city_info.get("description", f"{city}是中国一座具有独特魅力的城市"),
+        "description": final_info.get("description", f"{city}是中国一座具有独特魅力的城市"),
         "tags": city_info.get("tags", []),
         "rating": city_info.get("rating", 4.5),
         "image": city_info.get("image", ""),

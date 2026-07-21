@@ -654,22 +654,29 @@ export default function DestinationDetailPage() {
                 {detail.city}
               </Title>
               
-              {detail.info && (detail.info.province || detail.info.parent) && (
-                <div style={{ marginTop: 8, fontSize: 16, opacity: 0.9, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <EnvironmentOutlined style={{ fontSize: 18 }} />
-                  <span>
-                    {detail.info.province && `${detail.info.province}`}
-                    {detail.info.parent && detail.info.parent !== detail.city && ` · ${detail.info.parent}`}
-                    {detail.info.type && ` (${detail.info.type})`}
-                  </span>
-                </div>
-              )}
-              
-              {detail.geo && detail.geo.name && (
-                <div style={{ marginTop: 4, fontSize: 13, opacity: 0.75 }}>
-                  📍 {detail.geo.name}
-                </div>
-              )}
+              <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {(detail.info?.full_address || detail.geo?.province) && (
+                  <div style={{ fontSize: 16, display: 'flex', alignItems: 'center', gap: 8, fontWeight: 500 }}>
+                    <EnvironmentOutlined style={{ fontSize: 18, opacity: 0.9 }} />
+                    <span style={{ opacity: 0.95 }}>
+                      {detail.info?.full_address || (
+                        <>
+                          {detail.geo?.province && detail.geo.province}
+                          {detail.geo?.city && detail.geo.city !== detail.city && ` · ${detail.geo.city}`}
+                          {detail.geo?.district && detail.geo.district !== detail.city && ` · ${detail.geo.district}`}
+                        </>
+                      )}
+                      {detail.info?.type && <span style={{ opacity: 0.8, marginLeft: 6 }}>({detail.info.type})</span>}
+                    </span>
+                  </div>
+                )}
+                
+                {detail.geo?.name && detail.geo.name !== detail.city && detail.geo.name !== detail.info?.full_address && (
+                  <div style={{ fontSize: 13, opacity: 0.85, paddingLeft: 26 }}>
+                    📍 {detail.geo.name}
+                  </div>
+                )}
+              </div>
 
               {detail.rating > 0 && (
                 <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
