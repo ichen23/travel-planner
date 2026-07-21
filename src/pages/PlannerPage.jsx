@@ -14,7 +14,8 @@ import {
   CoffeeOutlined, ShoppingOutlined, PictureOutlined, TeamOutlined,
   RobotOutlined, ExportOutlined, SyncOutlined, AppstoreOutlined,
   SwapOutlined, EyeOutlined, ArrowRightOutlined,
-  CarryOutOutlined, CopyOutlined, DownloadOutlined, FileTextOutlined
+  CarryOutOutlined, CopyOutlined, DownloadOutlined, FileTextOutlined,
+  FormatPainterOutlined
 } from '@ant-design/icons'
 import { generateItinerary, generateAIContent } from '../services/destinationService'
 import { getAICache, setAICache } from '../services/storageService'
@@ -95,6 +96,8 @@ export default function PlannerPage() {
   const [aiGenerateLoading, setAiGenerateLoading] = useState(false)
   const [aiGenerateResult, setAiGenerateResult] = useState(null)
   const [aiGenerateType, setAiGenerateType] = useState(null)
+  const [copyStyleModalOpen, setCopyStyleModalOpen] = useState(false)
+  const [selectedCopyStyle, setSelectedCopyStyle] = useState('')
 
   const [formData, setFormData] = useState({
     city: params.get('city') || '',
@@ -308,13 +311,22 @@ export default function PlannerPage() {
     }
   }
 
-  const handleAIGenerate = async (type) => {
-    setAiGenerateType(type)
+  const handleAIGenerate = async (type, styleType = null) => {
+    let actualType = type
+    if (type === 'travel_copy') {
+      if (!styleType) {
+        setCopyStyleModalOpen(true)
+        return
+      }
+      actualType = styleType
+    }
+    
+    setAiGenerateType(actualType)
     setAiGenerateModalOpen(true)
     setAiGenerateLoading(true)
     setAiGenerateResult(null)
 
-    const cacheKey = `planner_${type}_${formData.city}_${formData.days}`
+    const cacheKey = `planner_${actualType}_${formData.city}_${formData.days}`
     const cached = getAICache(cacheKey)
     if (cached) {
       setAiGenerateResult(cached)
@@ -324,7 +336,7 @@ export default function PlannerPage() {
 
     try {
       const itinerary = generatedResult?.itinerary || {}
-      const response = await generateAIContent(type, {
+      const response = await generateAIContent(actualType, {
         city: formData.city,
         days: formData.days,
         budget: formData.budget,
@@ -345,6 +357,17 @@ export default function PlannerPage() {
       setAiGenerateLoading(false)
     }
   }
+
+  const COPY_STYLE_OPTIONS = [
+    { key: 'travel_copy', name: '📝 普通游玩文案', desc: '适合发朋友圈的游玩记录' },
+    { key: 'poetic', name: '🌸 诗意散文', desc: '文艺诗意的旅行随笔' },
+    { key: 'humorous', name: '😂 幽默吐槽', desc: '搞笑幽默的旅行体验' },
+    { key: 'literary', name: '📚 文艺风格', desc: '文艺青年的旅行散文' },
+    { key: 'ancient', name: '🏮 古风游记', desc: '仿古文风格的旅行记录' },
+    { key: 'epic', name: '⚔️ 史诗叙事', desc: '宏大叙事的旅行故事' },
+    { key: 'punch_card', name: '✅ 打卡攻略', desc: '详细实用的打卡攻略' },
+    { key: 'photo_spots', name: '📷 拍照建议', desc: '最佳拍摄点位和构图' },
+  ]
 
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text)
@@ -1449,6 +1472,48 @@ export default function PlannerPage() {
             </div>
           </div>
         ) : null}
+      </Modal>
+
+      <Modal
+        title={
+          <Space>
+            <FormatPainterOutlined style={{ color: '#722ed1' }} />
+            选择文案风格
+          </Space>
+        }
+        open={copyStyleModalOpen}
+        onCancel={() => setCopyStyleModalOpen(false)}
+        footer={null}
+        width={500}
+      >
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+          {COPY_STYLE_OPTIONS.map(option => (
+            <Card
+              key={option.key}
+              hoverable
+              size="small"
+              style={{ 
+                cursor: 'pointer',
+                borderColor: selectedCopyStyle === option.key ? '#722ed1' : undefined,
+                background: selectedCopyStyle === option.key ? '#f9f0ff' : undefined
+              }}
+              onClick={() => {
+                setSelectedCopyStyle(option.key)
+                setCopyStyleModalOpen(false)
+                setTimeout(() => handleAIGenerate('travel_copy', option.key), 100)
+              }}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>
+                  {option.name}
+                </div>
+                <div style={{ fontSize: 12, color: '#666' }}>
+                  {option.desc}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
       </Modal>
 
       <ExportModal

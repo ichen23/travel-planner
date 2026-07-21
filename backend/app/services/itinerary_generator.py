@@ -150,6 +150,22 @@ async def generate_smart_itinerary(
     foods.sort(key=lambda x: x.get("rating", 0), reverse=True)
     hotels.sort(key=lambda x: x.get("rating", 0), reverse=True)
     
+    if len(attractions) < 2 and len(foods) < 2:
+        return {
+            "days": [],
+            "total_cost_estimate": budget,
+            "summary": f"抱歉，暂时没有足够的{city}本地数据来生成详细行程。建议您选择较大的城市或稍后再试。",
+            "tips": [
+                "小贴士：较大城市的景点、美食数据更丰富，生成的行程会更详细",
+                "您可以尝试搜索北京、上海、杭州等热门旅游城市"
+            ],
+            "hotel_recommendations": [],
+            "config": {
+                "city": city, "days": days, "budget": budget, "people": people
+            },
+            "warning": "数据不足"
+        }
+    
     filtered_attractions = _filter_attractions(attractions, preference, elderly_friendly, easy_walk, photo_focus, is_hiking)
     filtered_foods = _filter_foods(foods, no_spicy)
     filtered_hotels = _filter_hotels(hotels, homestay, near_station, near_attraction, budget, days)

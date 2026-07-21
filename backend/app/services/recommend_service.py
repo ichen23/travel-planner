@@ -185,18 +185,12 @@ async def get_city_detail(city: str, use_realtime: bool = True):
     real_foods = to_poi_list(realtime.get("foods", []), 5)
     real_hotels = to_poi_list(realtime.get("hotels", []), 3)
     
-    if not real_attractions or len(real_attractions) < 3:
-        for poi_id, poi_info in POI_TIPS.items():
-            if poi_info.get('city') == city and len(real_attractions) < 8:
-                real_attractions.append({
-                    "name": poi_info.get('name', ''),
-                    "address": poi_info.get('address', ''),
-                    "lng": poi_info.get('lng'),
-                    "lat": poi_info.get('lat'),
-                    "rating": poi_info.get('rating', 4.5),
-                    "type": poi_info.get('type', ''),
-                    "photos": [],
-                })
+    if not real_attractions or len(real_attractions) == 0:
+        real_attractions = []
+    if not real_foods or len(real_foods) == 0:
+        real_foods = []
+    if not real_hotels or len(real_hotels) == 0:
+        real_hotels = []
     
     final_info = dict(city_info)
     if not final_info.get("province") and province:

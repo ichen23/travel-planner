@@ -259,11 +259,11 @@ const PoiDetailModal = ({ visible, poi, onClose, nestedMode = false, onOpenNeste
         <div>
           {photos.length > 0 && (
             <div style={{ position: 'relative', height: 300, overflow: 'hidden' }}>
-              <Image.PreviewGroup>
+              <Image.PreviewGroup items={photos}>
                 <Image
                   src={photos[0]}
                   alt={currentData?.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
                   fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect fill='%23f0f0f0' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' font-size='20' fill='%23999' text-anchor='middle' dominant-baseline='middle'%3E暂无图片%3C/text%3E%3C/svg%3E"
                 />
               </Image.PreviewGroup>
@@ -283,7 +283,7 @@ const PoiDetailModal = ({ visible, poi, onClose, nestedMode = false, onOpenNeste
                   }}
                 >
                   <CameraOutlined />
-                  {photos.length} 张图片
+                  {photos.length} 张图片 · 点击预览全部
                 </div>
               )}
             </div>
