@@ -122,19 +122,30 @@ async def search_poi(city: str, keywords: str, types: str = "", offset: int = 20
     geo = await geocode_city(city)
     
     if geo:
+        search_keywords = keywords
+        district = geo.get("district", "")
         city_name = geo.get("city") or city
-        params = {"keywords": keywords, "city": city_name, "citylimit": "true", "offset": offset, "page": 1}
+        
+        if district and district != city_name:
+            search_keywords = f"{district}{keywords}"
+        
+        params = {"keywords": search_keywords, "city": city_name, "citylimit": "true", "offset": offset, "page": 1}
         if types:
             params["types"] = types
         data = await _make_request(AMAP_POI_URL, params)
         
         if data.get("status") == "1" and data.get("pois"):
             result = [_parse_poi(p) for p in data.get("pois", [])]
+            if district and district != city_name:
+                filtered = [p for p in result if district in p.get("address", "") or district in p.get("name", "")]
+                if filtered:
+                    result = filtered
             _set_cache(cache_key, result)
             return result
         
         if geo.get("lng") and geo.get("lat"):
-            nearby = await search_nearby(geo["lng"], geo["lat"], keywords, 10000, offset, types)
+            nearby_radius = 5000 if district and district != city_name else 10000
+            nearby = await search_nearby(geo["lng"], geo["lat"], keywords, nearby_radius, offset, types)
             if nearby:
                 _set_cache(cache_key, nearby)
                 return nearby

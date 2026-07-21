@@ -653,6 +653,23 @@ export default function DestinationDetailPage() {
               <Title level={1} style={{ color: 'white', margin: 0, fontSize: 42, fontWeight: 700 }}>
                 {detail.city}
               </Title>
+              
+              {detail.info && (detail.info.province || detail.info.parent) && (
+                <div style={{ marginTop: 8, fontSize: 16, opacity: 0.9, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <EnvironmentOutlined style={{ fontSize: 18 }} />
+                  <span>
+                    {detail.info.province && `${detail.info.province}`}
+                    {detail.info.parent && detail.info.parent !== detail.city && ` · ${detail.info.parent}`}
+                    {detail.info.type && ` (${detail.info.type})`}
+                  </span>
+                </div>
+              )}
+              
+              {detail.geo && detail.geo.name && (
+                <div style={{ marginTop: 4, fontSize: 13, opacity: 0.75 }}>
+                  📍 {detail.geo.name}
+                </div>
+              )}
 
               {detail.rating > 0 && (
                 <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
