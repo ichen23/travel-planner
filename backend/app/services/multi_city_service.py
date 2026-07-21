@@ -538,16 +538,16 @@ def format_time(hour: int, minute: int = 0) -> str:
 def get_city_attractions(city: str) -> list:
     city = normalize_city_name(city)
     
-    if city in CITY_STATIC_DATA:
-        return CITY_STATIC_DATA[city]["attractions"]
-    
-    # 检查扩展数据
+    # 优先使用真实数据
     try:
-        from app.services.extended_data_loader import EXTENDED_CITIES_DATA
-        if city in EXTENDED_CITIES_DATA:
-            return EXTENDED_CITIES_DATA[city]["attractions"]
+        from app.services.real_city_data import REAL_CITY_ATTRACTIONS
+        if city in REAL_CITY_ATTRACTIONS:
+            return REAL_CITY_ATTRACTIONS[city]["attractions"]
     except ImportError:
         pass
+    
+    if city in CITY_STATIC_DATA:
+        return CITY_STATIC_DATA[city]["attractions"]
     
     city_info = {}
     if city in CITY_BASIC_INFO:
@@ -604,16 +604,16 @@ def get_city_attractions(city: str) -> list:
 def get_city_food(city: str) -> list:
     city = normalize_city_name(city)
     
-    if city in CITY_STATIC_DATA:
-        return CITY_STATIC_DATA[city]["food"]
-    
-    # 检查扩展数据
+    # 优先使用真实数据
     try:
-        from app.services.extended_data_loader import EXTENDED_CITIES_DATA
-        if city in EXTENDED_CITIES_DATA:
-            return EXTENDED_CITIES_DATA[city]["food"]
+        from app.services.real_city_data import REAL_CITY_ATTRACTIONS
+        if city in REAL_CITY_ATTRACTIONS:
+            return REAL_CITY_ATTRACTIONS[city]["food"]
     except ImportError:
         pass
+    
+    if city in CITY_STATIC_DATA:
+        return CITY_STATIC_DATA[city]["food"]
     
     return [
         {"name": f"{city}特色美食", "location": "市中心", "price_range": "30-60元", "recommend": "当地特色菜", "type": "正餐"},
@@ -625,16 +625,16 @@ def get_city_food(city: str) -> list:
 def get_city_info_data(city: str) -> dict:
     city = normalize_city_name(city)
     
-    if city in CITY_STATIC_DATA:
-        return CITY_STATIC_DATA[city]
-    
-    # 检查扩展数据
+    # 优先使用真实数据
     try:
-        from app.services.extended_data_loader import EXTENDED_CITIES_DATA
-        if city in EXTENDED_CITIES_DATA:
-            return EXTENDED_CITIES_DATA[city]
+        from app.services.real_city_data import REAL_CITY_ATTRACTIONS
+        if city in REAL_CITY_ATTRACTIONS:
+            return REAL_CITY_ATTRACTIONS[city]
     except ImportError:
         pass
+    
+    if city in CITY_STATIC_DATA:
+        return CITY_STATIC_DATA[city]
     
     city_info = {}
     if city in CITY_BASIC_INFO:
