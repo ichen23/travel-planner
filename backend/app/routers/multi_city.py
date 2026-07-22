@@ -47,6 +47,7 @@ async def generate_multi_city(request: MultiCityRequest):
     result = await generate_multi_city_itinerary(
         cities=request.cities,
         day_allocation=day_allocation,
+        total_days=request.total_days,
         budget=request.budget,
         preference=request.preference,
         user_attractions=request.user_attractions
@@ -142,6 +143,7 @@ async def quick_plan(request: MultiCityRequest):
     result = await generate_multi_city_itinerary(
         cities=request.cities,
         day_allocation=day_allocation,
+        total_days=request.total_days,
         budget=request.budget,
         preference=request.preference,
         user_attractions=request.user_attractions

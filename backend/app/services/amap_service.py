@@ -589,12 +589,12 @@ async def get_weather(adcode: str) -> dict:
             result["forecast"] = [{
                 "date": d.get("date"),
                 "week": d.get("week"),
-                "weather_day": d.get("weather_day"),
-                "weather_night": d.get("weather_night"),
-                "temp_max": d.get("temp_max"),
-                "temp_min": d.get("temp_min"),
-                "wind_direction_day": d.get("wind_direction_day"),
-                "wind_power_day": d.get("wind_power_day")
+                "weather_day": d.get("dayweather"),
+                "weather_night": d.get("nightweather"),
+                "temp_max": d.get("daytemp"),
+                "temp_min": d.get("nighttemp"),
+                "wind_direction_day": d.get("daywind"),
+                "wind_power_day": d.get("daypower")
             } for d in forecasts[0].get("casts", [])]
     
     _set_cache(cache_key, result)
