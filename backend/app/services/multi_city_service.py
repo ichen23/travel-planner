@@ -17,112 +17,161 @@ _amap_cache = {}
 
 async def fetch_city_real_data(city: str) -> dict:
     """异步获取城市真实POI数据"""
-    cache_key = f"real_data_{city}"
+    cache_key = f"real_data_{city}_v2"
     if cache_key in _amap_cache:
         return _amap_cache[cache_key]
     
     normalized_city = normalize_city_name(city)
     
-    if normalized_city in CITY_STATIC_DATA:
-        return CITY_STATIC_DATA[normalized_city]
-    
     from app.services.complete_city_data import POPULAR_CITIES
     is_popular = normalized_city in POPULAR_CITIES
-    max_attractions = 18 if is_popular else 12
-    max_foods = 10 if is_popular else 8
+    
+    if is_popular:
+        max_attractions = 20
+        max_foods = 12
+    elif normalized_city in ["北京", "上海", "广州", "深圳", "成都", "杭州", "南京", "西安", "重庆", "武汉", "天津", "苏州", "长沙", "青岛", "厦门"]:
+        max_attractions = 20
+        max_foods = 12
+    else:
+        max_attractions = 15
+        max_foods = 10
+    
+    print(f"正在获取 {normalized_city} 的真实POI数据 (景点{max_attractions}个, 美食{max_foods}个)...")
     
     try:
         from app.services.amap_service import search_attractions, search_foods, search_hotels
         
         attractions_pois, foods_pois, hotels_pois = await asyncio.gather(
-            search_attractions(normalized_city, limit=max_attractions + 5),
-            search_foods(normalized_city, limit=max_foods),
+            search_attractions(normalized_city, limit=max_attractions + 10),
+            search_foods(normalized_city, limit=max_foods + 5),
             search_hotels(normalized_city, limit=5),
             return_exceptions=True
         )
         
         if isinstance(attractions_pois, Exception):
+            print(f"  [ERROR] 获取景点失败: {attractions_pois}")
             attractions_pois = []
         if isinstance(foods_pois, Exception):
+            print(f"  [ERROR] 获取美食失败: {foods_pois}")
             foods_pois = []
         if isinstance(hotels_pois, Exception):
             hotels_pois = []
         
+        print(f"  [OK] 从高德API获取到 {len(attractions_pois)} 个景点, {len(foods_pois)} 个美食")
+        
         attractions = []
         used_names = set()
         for poi in attractions_pois[:max_attractions]:
-            if poi.get('name') and poi['name'] not in used_names:
-                used_names.add(poi['name'])
-                
-                base_hour = 8 + len(attractions) * 2
-                if base_hour > 18:
-                    base_hour = 18
-                
-                cost = poi.get('cost', 0)
-                if cost:
+            original_name = poi.get('name', '')
+            if not original_name:
+                continue
+            
+            clean_name = sanitize_poi_name(original_name)
+            if not clean_name:
+                clean_name = original_name
+            
+            if clean_name in used_names:
+                continue
+            used_names.add(clean_name)
+            
+            base_hour = 8 + len(attractions) * 2
+            if base_hour > 18:
+                base_hour = 18
+            
+            cost = poi.get('cost', 0)
+            if cost:
+                try:
                     ticket_price = f"{int(float(cost))}元"
-                else:
+                except:
                     ticket_price = "以景区为准"
-                
-                rating_val = poi.get('rating', 0)
-                if rating_val and rating_val != '0':
-                    try:
-                        rating = float(rating_val) * 10 / 2
-                        rating = min(5, max(3, rating))
-                    except (ValueError, TypeError):
-                        rating = 4.0
+            else:
+                ticket_price = "以景区为准"
+            
+            rating_val = poi.get('rating', 0)
+            try:
+                if rating_val and float(rating_val) > 0:
+                    rating = float(rating_val)
                 else:
                     rating = 4.0
-                
-                attractions.append({
-                    'name': poi['name'],
-                    'address': poi.get('address', ''),
-                    'start_time': f"{base_hour:02d}:00",
-                    'duration_hours': 2.5 if len(attractions) < 3 else 2,
-                    'best_period': 'morning' if base_hour < 12 else ('afternoon' if base_hour < 18 else 'evening'),
-                    'ticket': ticket_price,
-                    'rating': round(rating, 1),
-                    'tags': ['热门'] if rating >= 4.5 else ['推荐'],
-                    'tips': f"来自高德地图真实POI数据",
-                    'description': poi.get('intro', f"{poi['name']}是{normalized_city}的热门景点"),
-                    'source': 'amap',
-                    'is_real': True
-                })
+            except (ValueError, TypeError):
+                rating = 4.0
+            
+            if rating < 3.0:
+                continue
+            
+            attraction_type = poi.get('type', '')
+            addr = poi.get('address', '')
+            
+            is_mountain_or_nature = any(kw in addr for kw in ['山', '景区', '国家公园', '森林', '峡谷']) or \
+                                     any(kw in attraction_type for kw in ['自然', '山', '景区'])
+            
+            attractions.append({
+                'name': clean_name,
+                'original_name': original_name,
+                'address': addr,
+                'type': attraction_type,
+                'start_time': f"{base_hour:02d}:00",
+                'duration_hours': 4 if is_mountain_or_nature else 2,
+                'best_period': 'morning' if base_hour < 12 else ('afternoon' if base_hour < 18 else 'evening'),
+                'ticket': ticket_price,
+                'rating': round(rating, 1),
+                'tags': ['热门'] if rating >= 4.5 else ['推荐'],
+                'is_nature': is_mountain_or_nature,
+                'open_time': poi.get('open_time', ''),
+                'source': 'amap',
+                'is_real': True
+            })
+        
+        print(f"  [CLEANED] 清洗后剩余 {len(attractions)} 个景点")
         
         foods = []
         used_food_names = set()
         for poi in foods_pois[:max_foods]:
-            if poi.get('name') and poi['name'] not in used_food_names:
-                used_food_names.add(poi['name'])
-                
-                cost = poi.get('cost', 0)
-                if cost:
-                    price_low = int(float(cost) * 30)
-                    price_high = int(float(cost) * 80)
-                    price_range = f"{price_low}-{price_high}元"
-                else:
-                    price_range = "50-120元"
-                
-                rating_val = poi.get('rating', 0)
-                if rating_val and rating_val != '0':
-                    try:
-                        rating = float(rating_val) * 10 / 2
-                        rating = min(5, max(3, rating))
-                    except (ValueError, TypeError):
-                        rating = 4.0
+            original_name = poi.get('name', '')
+            if not original_name:
+                continue
+            
+            clean_name = sanitize_poi_name(original_name)
+            if not clean_name:
+                clean_name = original_name
+            
+            if clean_name in used_food_names:
+                continue
+            used_food_names.add(clean_name)
+            
+            cost = poi.get('cost', 0)
+            try:
+                cost_value = float(cost) if cost else 50
+            except (ValueError, TypeError):
+                cost_value = 50
+            
+            rating_val = poi.get('rating', 0)
+            try:
+                if rating_val and float(rating_val) > 0:
+                    rating = float(rating_val)
                 else:
                     rating = 4.0
-                
-                foods.append({
-                    'name': poi['name'],
-                    'location': poi.get('address', ''),
-                    'price_range': price_range,
-                    'recommend': poi.get('type', '特色美食'),
-                    'type': poi.get('type', '特色餐饮'),
-                    'rating': round(rating, 1),
-                    'source': 'amap',
-                    'is_real': True
-                })
+            except (ValueError, TypeError):
+                rating = 4.0
+            
+            if rating < 3.0:
+                continue
+            
+            food_type = poi.get('type', '特色餐饮')
+            food_addr = poi.get('address', '')
+            
+            foods.append({
+                'name': clean_name,
+                'original_name': original_name,
+                'address': food_addr,
+                'type': food_type,
+                'cost': cost_value,
+                'rating': round(rating, 1),
+                'source': 'amap',
+                'is_real': True
+            })
+        
+        print(f"  [GOOD] 最终选择 {len(foods)} 家餐厅")
         
         hotels = []
         if isinstance(hotels_pois, list):
@@ -917,30 +966,164 @@ CITY_PAIR_TRAINS = {
 }
 
 
+def sanitize_poi_name(name: str) -> str:
+    import re
+    if not name:
+        return name
+    
+    original_name = name
+    
+    name = re.sub(r'（[^）]{0,20}）', '', name)
+    name = re.sub(r'\([^)]{0,20}\)', '', name)
+    
+    name = re.sub(r'\s*\d+\s*号\s*楼?', '', name)
+    name = re.sub(r'\s*\d+\s*层?', '', name)
+    
+    if name != original_name:
+        name = re.sub(r'\s*\d+', '', name)
+    
+    name = re.sub(r'\s*B\d+\s*', '', name)
+    name = re.sub(r'\s*A\d+\s*', '', name)
+    
+    name = name.strip()
+    
+    if len(name) < 2:
+        name = original_name
+    
+    name = re.sub(r'景区$', '', name)
+    name = re.sub(r'景点$', '', name)
+    
+    return name.strip()
+
+
+async def get_train_info_real(from_city: str, to_city: str) -> dict:
+    from app.services.train_service import search_trains
+    
+    today = datetime.now().strftime('%Y-%m-%d')
+    
+    try:
+        result = await search_trains(from_city, to_city, today, True)
+        
+        if result.get("success") and result.get("trains"):
+            trains = result["trains"]
+            
+            preferred = None
+            for train in trains:
+                dep_hour = int(train.get("departure_time", "00:00").split(":")[0])
+                if 16 <= dep_hour <= 21:
+                    preferred = train
+                    break
+            
+            if not preferred and trains:
+                preferred = trains[0]
+            
+            if preferred:
+                duration_str = preferred.get("duration", "00:00")
+                duration_min = 120
+                
+                if ":" in duration_str:
+                    parts = duration_str.split(":")
+                    try:
+                        hours = int(parts[0])
+                        minutes = int(parts[1]) if len(parts) > 1 else 0
+                        duration_min = hours * 60 + minutes
+                        if hours > 0:
+                            duration_text = f"{hours}小时{minutes}分"
+                        else:
+                            duration_text = f"{minutes}分钟"
+                    except ValueError:
+                        duration_text = duration_str
+                        duration_min = 120
+                elif "小时" in duration_str:
+                    parts = duration_str.replace("分钟", "").split("小时")
+                    try:
+                        duration_min = int(parts[0]) * 60
+                        if len(parts) > 1 and parts[1].isdigit():
+                            duration_min += int(parts[1])
+                    except ValueError:
+                        pass
+                    duration_text = duration_str
+                else:
+                    duration_text = duration_str
+                
+                price = 0
+                prices = preferred.get("prices", {})
+                if prices.get("second_seat"):
+                    try:
+                        price = int(prices["second_seat"])
+                    except:
+                        pass
+                elif prices.get("first_seat"):
+                    try:
+                        price = int(prices["first_seat"])
+                    except:
+                        pass
+                elif prices.get("hard_seat"):
+                    try:
+                        price = int(prices["hard_seat"])
+                    except:
+                        pass
+                
+                train_no = preferred.get("train_no", "")
+                train_type = preferred.get("type", "高铁")
+                if train_no.startswith("G"):
+                    train_type_en = "G"
+                elif train_no.startswith("D"):
+                    train_type_en = "D"
+                elif train_no.startswith("C"):
+                    train_type_en = "C"
+                else:
+                    train_type_en = "G"
+                
+                return {
+                    "train_number": train_no,
+                    "type": train_type_en,
+                    "type_name": train_type,
+                    "duration_min": duration_min,
+                    "duration_text": duration_text,
+                    "price": price,
+                    "departure_time": preferred.get("departure_time", ""),
+                    "arrival_time": preferred.get("arrival_time", ""),
+                    "is_real": True
+                }
+    except Exception as e:
+        print(f"Error getting real train info: {e}")
+    
+    return get_train_info(from_city, to_city)
+
+
 def get_train_info(from_city: str, to_city: str) -> dict:
     key = (from_city, to_city)
     if key in CITY_PAIR_TRAINS:
         info = CITY_PAIR_TRAINS[key]
-        train_type = random.choice(info["train_types"])
-        train_num = f"{train_type}{random.randint(1, 9999)}"
+        duration_min = info.get("duration_min", 180)
+        train_types = info.get("train_types", ["G"])
+        train_type = train_types[0] if train_types else "G"
         return {
-            "train_number": train_num,
+            "train_number": "请查询12306",
             "type": train_type,
             "type_name": "高铁" if train_type == "G" else "动车" if train_type == "D" else "城际",
-            "duration_min": info["duration_min"],
-            "duration_text": f"{info['duration_min'] // 60}小时{info['duration_min'] % 60}分" if info['duration_min'] >= 60 else f"{info['duration_min']}分钟",
-            "price": info["price"],
+            "duration_min": duration_min,
+            "duration_text": f"{duration_min // 60}小时{duration_min % 60}分" if duration_min >= 60 else f"{duration_min}分钟",
+            "price": info.get("price", 0),
+            "departure_time": "08:00",
+            "arrival_time": f"{(8 + duration_min // 60) % 24:02d}:{duration_min % 60:02d}",
+            "is_real": False,
+            "note": "车次信息请以12306为准"
         }
     else:
-        estimated_min = random.randint(90, 240)
+        estimated_min = 180
         return {
-            "train_number": f"G{random.randint(1, 9999)}",
+            "train_number": "请查询12306",
             "type": "G",
             "type_name": "高铁",
             "duration_min": estimated_min,
-            "duration_text": f"{estimated_min // 60}小时{estimated_min % 60}分",
-            "price": estimated_min * 2,
-            "note": "建议在12306查询准确车次"
+            "duration_text": f"{estimated_min // 60}小时",
+            "price": estimated_min,
+            "departure_time": "08:00",
+            "arrival_time": "11:00",
+            "is_real": False,
+            "note": "车次信息请以12306为准"
         }
 
 
@@ -1367,7 +1550,9 @@ async def generate_multi_city_itinerary(cities: list, day_allocation: list,
             from_city = cities[i]
             to_city = cities[i + 1]
             
-            train_info = get_train_info(from_city, to_city)
+            print(f"正在获取 {from_city} -> {to_city} 的真实车票信息...")
+            train_info = await get_train_info_real(from_city, to_city)
+            print(f"  -> 车次: {train_info.get('train_number', '未知')}, 时长: {train_info.get('duration_text', '未知')}, 票价: {train_info.get('price', 0)}元")
             
             last_day_idx = last_day_index_by_city.get(from_city)
             last_day_end_time = "19:00"
@@ -1379,26 +1564,39 @@ async def generate_multi_city_itinerary(cities: list, day_allocation: list,
                         last_day_end_time = item.get('end_time', '19:00')
                         break
             
-            dep_hour, dep_minute = map(int, last_day_end_time.split(':'))
-            new_dep_minutes = dep_hour * 60 + dep_minute + 60
-            if new_dep_minutes > 21 * 60:
-                new_dep_minutes = 21 * 60
-            if new_dep_minutes < 16 * 60:
-                new_dep_minutes = 18 * 60
-            dynamic_departure = minutes_to_time(new_dep_minutes)
+            if train_info.get('is_real') and train_info.get('departure_time'):
+                real_departure = train_info['departure_time']
+                print(f"  -> 使用真实发车时间: {real_departure}")
+            else:
+                dep_hour, dep_minute = map(int, last_day_end_time.split(':'))
+                new_dep_minutes = dep_hour * 60 + dep_minute + 30
+                if new_dep_minutes > 18 * 60:
+                    new_dep_minutes = 18 * 60
+                if new_dep_minutes < 14 * 60:
+                    new_dep_minutes = 16 * 60
+                real_departure = minutes_to_time(new_dep_minutes)
+                print(f"  -> 最后景点结束时间: {last_day_end_time}, 建议出发时间: {real_departure}")
+            
+            is_real = train_info.get("is_real", False)
+            
+            if is_real:
+                arrival_time = train_info.get("arrival_time") or calculate_arrival_time(real_departure, train_info.get("duration_min", 120))
+            else:
+                arrival_time = calculate_arrival_time(real_departure, train_info.get("duration_min", 120))
             
             transfer_segment = {
                 "from_city": from_city,
                 "to_city": to_city,
-                "train_number": train_info.get("train_number", "以12306为准"),
+                "train_number": train_info.get("train_number", "请查询12306"),
                 "train_type": train_info.get("type", "G"),
                 "train_type_name": train_info.get("type_name", "高铁"),
-                "departure": dynamic_departure,
-                "arrival": calculate_arrival_time(dynamic_departure, train_info.get("duration_min", 120)),
+                "departure": real_departure,
+                "arrival": arrival_time,
                 "duration": train_info.get("duration_text", "约2小时"),
                 "duration_minutes": train_info.get("duration_min", 120),
                 "price": train_info.get("price", 0),
-                "note": "建议提前在12306查询并预订车票",
+                "is_real": is_real,
+                "note": train_info.get("note", "建议提前在12306查询并预订车票"),
                 "icon": "🚄"
             }
             transfer_segments.append(transfer_segment)
@@ -1462,25 +1660,28 @@ def calculate_arrival_time(departure_time: str, duration_minutes: int) -> str:
 def add_transfer_to_day(day_plan: dict, from_city: str, to_city: str, transfer_info: dict):
     schedule = day_plan["schedule"]
     
-    evening_start = 17 * 60
+    evening_start = 15 * 60
     evening_items = [item for item in schedule if time_to_minutes(item["start_time"]) >= evening_start]
     morning_items = [item for item in schedule if time_to_minutes(item["start_time"]) < evening_start]
     
-    dep_time = transfer_info.get("departure", "18:30")
+    dep_time = transfer_info.get("departure") or transfer_info.get("departure_time") or "18:30"
+    arr_time = transfer_info.get("arrival") or transfer_info.get("arrival_time") or "21:00"
     dep_hour, dep_minute = map(int, dep_time.split(":"))
-    go_station_time = dep_hour - 1
-    go_station_minute = dep_minute
-    if go_station_minute >= 30:
-        go_station_time = dep_hour - 1
-        go_station_minute = dep_minute - 30
-    else:
-        go_station_time = dep_hour - 1
-        go_station_minute = dep_minute + 30
     
-    go_station_time_str = f"{go_station_time:02d}:{go_station_minute:02d}"
+    dep_total_min = dep_hour * 60 + dep_minute
     
-    dinner_start_hour = max(go_station_time - 1, 17)
-    dinner_start_str = f"{dinner_start_hour:02d}:00"
+    go_station_total_min = dep_total_min - 45
+    
+    dinner_start_total_min = go_station_total_min - 60
+    
+    dinner_start_hour = dinner_start_total_min // 60
+    dinner_start_minute = dinner_start_total_min % 60
+    
+    go_station_hour = go_station_total_min // 60
+    go_station_minute = go_station_total_min % 60
+    
+    go_station_time_str = f"{go_station_hour:02d}:{go_station_minute:02d}"
+    dinner_start_str = f"{dinner_start_hour:02d}:{dinner_start_minute:02d}"
     
     new_evening = [
         {
@@ -1497,17 +1698,17 @@ def add_transfer_to_day(day_plan: dict, from_city: str, to_city: str, transfer_i
             "name": f"前往{from_city}火车站",
             "start_time": go_station_time_str,
             "end_time": dep_time,
-            "duration_minutes": 30,
+            "duration_minutes": 45,
             "tips": "建议打车或地铁，预留足够时间",
             "icon": "🚖"
         },
         {
             "type": "transport",
             "name": f"{transfer_info['train_number']}次 {from_city}→{to_city}",
-            "start_time": transfer_info["departure"],
-            "end_time": transfer_info["arrival"],
-            "duration_minutes": transfer_info["duration_minutes"],
-            "tips": f"{transfer_info['duration']}到达{to_city}，票价{transfer_info['price']}元",
+            "start_time": transfer_info.get("departure") or transfer_info.get("departure_time"),
+            "end_time": transfer_info.get("arrival") or transfer_info.get("arrival_time"),
+            "duration_minutes": transfer_info.get("duration_minutes") or transfer_info.get("duration_min", 60),
+            "tips": f"{transfer_info.get('duration') or transfer_info.get('duration_text')}到达{to_city}，票价{transfer_info['price']}元",
             "icon": "🚄"
         }
     ]

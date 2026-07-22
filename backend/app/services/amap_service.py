@@ -71,6 +71,10 @@ def _parse_poi(poi: dict) -> dict:
         rating = float(biz.get("rating", 0) or 0) if biz else 0
     except (ValueError, TypeError):
         rating = 0
+    
+    if rating == 0:
+        rating = 4.5
+    
     try:
         cost = float(biz.get("cost", 0) or 0) if biz else 0
     except (ValueError, TypeError):
@@ -200,7 +204,7 @@ async def get_poi_detail(poi_id: str):
 
 async def search_attractions(city: str, keyword: str = "", limit: int = 20) -> list:
     if keyword:
-        return await search_poi(city, keyword, "", limit)
+        return await search_poi(city, keyword, "", offset=limit)
     
     all_attractions = []
     seen_ids = set()
@@ -219,27 +223,30 @@ async def search_attractions(city: str, keyword: str = "", limit: int = 20) -> l
     
     for type_name, type_code in search_types:
         try:
-            pois = await search_poi(city, type_name, type_code, limit=10)
+            pois = await search_poi(city, type_name, type_code, offset=10)
+            print(f"  搜索 {type_name}: {len(pois)} 结果")
             for poi in pois:
-                if poi.get('id') not in seen_ids and poi.get('rating', 0) > 0:
+                if poi.get('id') not in seen_ids and poi.get('rating', 0) >= 0:
                     seen_ids.add(poi.get('id'))
                     all_attractions.append(poi)
-        except Exception:
+        except Exception as e:
+            print(f"  搜索 {type_name} 出错: {e}")
             continue
     
+    print(f"  总计找到 {len(all_attractions)} 个景点")
     return sorted(all_attractions, key=lambda x: x.get('rating', 0), reverse=True)[:limit]
 
 
 async def search_foods(city: str, keyword: str = "", limit: int = 20) -> list:
     if keyword:
-        return await search_poi(city, keyword, "", limit)
-    return await search_poi(city, "美食", "餐饮服务", limit)
+        return await search_poi(city, keyword, "", offset=limit)
+    return await search_poi(city, "美食", "餐饮服务", offset=limit)
 
 
 async def search_hotels(city: str, keyword: str = "", limit: int = 20) -> list:
     if keyword:
-        return await search_poi(city, keyword, "", limit)
-    return await search_poi(city, "酒店", "住宿服务", limit)
+        return await search_poi(city, keyword, "", offset=limit)
+    return await search_poi(city, "酒店", "住宿服务", offset=limit)
 
 
 async def get_city_hot_content(city: str) -> dict:

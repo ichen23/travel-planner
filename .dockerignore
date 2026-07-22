@@ -7,6 +7,8 @@ __pycache__
 .gitignore
 .env
 .env.local
+.env.production
+.env.development
 .DS_Store
 *.log
 .vscode
@@ -14,3 +16,5 @@ __pycache__
 test_*.py
 *.test.jsx
 *.spec.jsx
+travel_planner_data.json
+local_database.db
