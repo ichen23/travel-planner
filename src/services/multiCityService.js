@@ -31,3 +31,14 @@ export const quickPlanMultiCity = (cities, dayAllocation, totalDays, budget, pre
 
 export const getMultiCityDetail = (city) =>
   api.get(`/multi-city/city-detail/${encodeURIComponent(city)}`)
+
+export const modifyDayItinerary = (itinerary, dayIndex, action, params) =>
+  api.post('/multi-city/modify-day', {
+    itinerary,
+    day_index: dayIndex,
+    action,
+    params
+  })
+
+export const getAvailableAttractions = (city) =>
+  api.get(`/multi-city/available-attractions/${encodeURIComponent(city)}`)

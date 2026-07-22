@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   Card, Row, Col, Button, InputNumber, Select, Space, Typography,
   List, Tag, Divider, Steps, Alert, Empty, Spin, Progress, message,
-  Modal, Timeline, Tooltip, Badge, Statistic, Checkbox, Input
+  Modal, Timeline, Tooltip, Badge, Statistic, Checkbox, Input, Dropdown
 } from 'antd'
 import {
   PlusOutlined, DeleteOutlined, ArrowUpOutlined, ArrowDownOutlined,
@@ -10,10 +10,12 @@ import {
   ClockCircleOutlined, CarOutlined, StarOutlined, HomeOutlined,
   CheckCircleOutlined, InfoCircleOutlined, ShoppingOutlined,
   CopyOutlined, PrinterOutlined, ShareAltOutlined,
-  SwapOutlined, TeamOutlined, FilterOutlined, HeartOutlined
+  SwapOutlined, TeamOutlined, FilterOutlined, HeartOutlined,
+  ReloadOutlined, EditOutlined, CloseCircleOutlined
 } from '@ant-design/icons'
 import {
-  getMultiCityCities, generateMultiCityItinerary, getTrainInfo, getCityAttractions
+  getMultiCityCities, generateMultiCityItinerary, getTrainInfo, getCityAttractions,
+  modifyDayItinerary, getAvailableAttractions
 } from '../services/multiCityService'
 import { getRealPoi } from '../services/mapService'
 
@@ -41,6 +43,12 @@ export default function MultiCityPlanner() {
   const [modalAttractions, setModalAttractions] = useState([])
   const [loadingAttractions, setLoadingAttractions] = useState(false)
   const [tempSelectedAttractions, setTempSelectedAttractions] = useState([])
+  
+  const [showModifyModal, setShowModifyModal] = useState(false)
+  const [modifyDayIndex, setModifyDayIndex] = useState(-1)
+  const [modifyAction, setModifyAction] = useState('')
+  const [availableAttractionsList, setAvailableAttractionsList] = useState([])
+  const [loadingModify, setLoadingModify] = useState(false)
 
   useEffect(() => {
     loadAvailableCities()
@@ -266,6 +274,71 @@ export default function MultiCityPlanner() {
 
   const handlePrint = () => {
     window.print()
+  }
+
+  const handleModifyDay = async (dayIndex, action) => {
+    setModifyDayIndex(dayIndex)
+    setModifyAction(action)
+    setShowModifyModal(true)
+    
+    if (action === 'swap' && result?.days[dayIndex]) {
+      const city = result.days[dayIndex].city
+      try {
+        const response = await getAvailableAttractions(city)
+        if (response.success) {
+          setAvailableAttractionsList(response.attractions)
+        }
+      } catch (error) {
+        message.error('获取景点列表失败')
+      }
+    }
+  }
+
+  const handleConfirmModify = async (oldAttraction, newAttraction) => {
+    setLoadingModify(true)
+    try {
+      let params = {}
+      if (modifyAction === 'swap') {
+        params = { old_attraction: oldAttraction, new_attraction: newAttraction }
+      }
+      
+      const response = await modifyDayItinerary(result, modifyDayIndex, modifyAction, params)
+      
+      if (response.success) {
+        const updatedResult = { ...result }
+        updatedResult.days[modifyDayIndex] = response.day
+        setResult(updatedResult)
+        message.success(response.message || '修改成功')
+        setShowModifyModal(false)
+      } else {
+        message.error(response.message || '修改失败')
+      }
+    } catch (error) {
+      message.error('修改行程失败')
+    } finally {
+      setLoadingModify(false)
+    }
+  }
+
+  const handleRemoveAttraction = async (attractionName) => {
+    setLoadingModify(true)
+    try {
+      const response = await modifyDayItinerary(result, modifyDayIndex, 'remove_attraction', { attraction: attractionName })
+      
+      if (response.success) {
+        const updatedResult = { ...result }
+        updatedResult.days[modifyDayIndex] = response.day
+        setResult(updatedResult)
+        message.success(`已删除 ${attractionName}`)
+        setShowModifyModal(false)
+      } else {
+        message.error(response.message || '删除失败')
+      }
+    } catch (error) {
+      message.error('删除失败')
+    } finally {
+      setLoadingModify(false)
+    }
   }
 
   const handleCopy = () => {
@@ -741,6 +814,24 @@ export default function MultiCityPlanner() {
           {day.is_transfer_day && <Tag color="orange">中转日</Tag>}
         </Space>
       }
+      extra={
+        <Space>
+          <Button 
+            size="small" 
+            icon={<SwapOutlined />} 
+            onClick={() => handleModifyDay(dayIndex, 'swap')}
+          >
+            替换景点
+          </Button>
+          <Button 
+            size="small" 
+            icon={<ReloadOutlined />} 
+            onClick={() => handleModifyDay(dayIndex, 'regenerate')}
+          >
+            重新生成
+          </Button>
+        </Space>
+      }
     >
       {day.hotel_recommendation && (
         <Alert
@@ -1109,6 +1200,109 @@ export default function MultiCityPlanner() {
       </Modal>
 
       {renderAttractionModal()}
+
+      <Modal
+        title={
+          <Space>
+            <EditOutlined />
+            <span>修改行程 - 第{modifyDayIndex + 1}天 {result?.days[modifyDayIndex]?.city}</span>
+          </Space>
+        }
+        open={showModifyModal}
+        onCancel={() => setShowModifyModal(false)}
+        footer={null}
+        width={800}
+      >
+        {modifyAction === 'swap' && (
+          <div>
+            <Alert
+              message="选择要替换的景点和新景点"
+              description="从当前行程中选择一个景点，然后从列表中选择一个新景点来替换它"
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+            
+            {result?.days[modifyDayIndex]?.schedule?.filter(item => item.type === 'attraction').map((item, idx) => (
+              <Card
+                key={idx}
+                size="small"
+                style={{ marginBottom: 12 }}
+                title={
+                  <Space>
+                    <span>{item.name}</span>
+                    <Tag color="blue">{item.start_time}</Tag>
+                    {item.ticket && <Tag color="orange">💰 {item.ticket}</Tag>}
+                  </Space>
+                }
+                extra={
+                  <Dropdown
+                    menu={{
+                      items: availableAttractionsList
+                        .filter(a => a.name !== item.name)
+                        .slice(0, 10)
+                        .map(attr => ({
+                          key: attr.name,
+                          label: (
+                            <Space onClick={() => handleConfirmModify(item.name, attr.name)}>
+                              <span>{attr.name}</span>
+                              {attr.rating && <Tag color="gold">⭐ {attr.rating}</Tag>}
+                            </Space>
+                          )
+                        }))
+                    }}
+                    placement="bottomRight"
+                  >
+                    <Button type="primary" size="small">
+                      替换为 ▼
+                    </Button>
+                  </Dropdown>
+                }
+              >
+                {item.tips && <div style={{ color: '#666', fontSize: 13 }}>{item.tips}</div>}
+                <div style={{ marginTop: 8 }}>
+                  <Button
+                    size="small"
+                    icon={<CloseCircleOutlined />}
+                    danger
+                    onClick={() => handleRemoveAttraction(item.name)}
+                  >
+                    删除此景点
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+        
+        {modifyAction === 'regenerate' && (
+          <div>
+            <Alert
+              message="重新生成这一天的行程"
+              description="点击下方按钮，系统将为您重新生成这一天的行程安排"
+              type="warning"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+            
+            <Button
+              type="primary"
+              loading={loadingModify}
+              onClick={() => handleConfirmModify(null, null)}
+              block
+            >
+              <ReloadOutlined /> 重新生成行程
+            </Button>
+          </div>
+        )}
+
+        {loadingModify && (
+          <div style={{ textAlign: 'center', marginTop: 16 }}>
+            <Spin />
+            <div style={{ marginTop: 8 }}>正在修改行程...</div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

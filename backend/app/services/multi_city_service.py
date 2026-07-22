@@ -26,12 +26,18 @@ async def fetch_city_real_data(city: str) -> dict:
     if normalized_city in CITY_STATIC_DATA:
         return CITY_STATIC_DATA[normalized_city]
     
+    from app.services.complete_city_data import POPULAR_CITIES
+    is_popular = normalized_city in POPULAR_CITIES
+    max_attractions = 18 if is_popular else 12
+    max_foods = 10 if is_popular else 8
+    
     try:
-        from app.services.amap_service import search_attractions, search_foods
+        from app.services.amap_service import search_attractions, search_foods, search_hotels
         
-        attractions_pois, foods_pois = await asyncio.gather(
-            search_attractions(normalized_city, limit=15),
-            search_foods(normalized_city, limit=10),
+        attractions_pois, foods_pois, hotels_pois = await asyncio.gather(
+            search_attractions(normalized_city, limit=max_attractions + 5),
+            search_foods(normalized_city, limit=max_foods),
+            search_hotels(normalized_city, limit=5),
             return_exceptions=True
         )
         
@@ -39,46 +45,103 @@ async def fetch_city_real_data(city: str) -> dict:
             attractions_pois = []
         if isinstance(foods_pois, Exception):
             foods_pois = []
+        if isinstance(hotels_pois, Exception):
+            hotels_pois = []
         
         attractions = []
-        for poi in attractions_pois[:10]:
-            if poi.get('name'):
+        used_names = set()
+        for poi in attractions_pois[:max_attractions]:
+            if poi.get('name') and poi['name'] not in used_names:
+                used_names.add(poi['name'])
+                
                 base_hour = 8 + len(attractions) * 2
-                if base_hour > 16:
-                    base_hour = 16
+                if base_hour > 18:
+                    base_hour = 18
+                
+                cost = poi.get('cost', 0)
+                if cost:
+                    ticket_price = f"{int(float(cost))}元"
+                else:
+                    ticket_price = "以景区为准"
+                
+                rating_val = poi.get('rating', 0)
+                if rating_val and rating_val != '0':
+                    try:
+                        rating = float(rating_val) * 10 / 2
+                        rating = min(5, max(3, rating))
+                    except (ValueError, TypeError):
+                        rating = 4.0
+                else:
+                    rating = 4.0
+                
                 attractions.append({
                     'name': poi['name'],
                     'address': poi.get('address', ''),
                     'start_time': f"{base_hour:02d}:00",
-                    'duration_hours': 2,
+                    'duration_hours': 2.5 if len(attractions) < 3 else 2,
                     'best_period': 'morning' if base_hour < 12 else ('afternoon' if base_hour < 18 else 'evening'),
-                    'ticket': f"{int(poi.get('cost', 0) * 20) if poi.get('cost') else '未知'}元",
-                    'rating': int(poi.get('rating', 0) * 10) / 2 if poi.get('rating') else 4,
-                    'tags': ['高德推荐'],
-                    'tips': f"来自高德地图的真实推荐：{poi.get('address', '')}",
+                    'ticket': ticket_price,
+                    'rating': round(rating, 1),
+                    'tags': ['热门'] if rating >= 4.5 else ['推荐'],
+                    'tips': f"来自高德地图真实POI数据",
+                    'description': poi.get('intro', f"{poi['name']}是{normalized_city}的热门景点"),
                     'source': 'amap',
                     'is_real': True
                 })
         
         foods = []
-        for poi in foods_pois[:8]:
-            if poi.get('name'):
+        used_food_names = set()
+        for poi in foods_pois[:max_foods]:
+            if poi.get('name') and poi['name'] not in used_food_names:
+                used_food_names.add(poi['name'])
+                
+                cost = poi.get('cost', 0)
+                if cost:
+                    price_low = int(float(cost) * 30)
+                    price_high = int(float(cost) * 80)
+                    price_range = f"{price_low}-{price_high}元"
+                else:
+                    price_range = "50-120元"
+                
+                rating_val = poi.get('rating', 0)
+                if rating_val and rating_val != '0':
+                    try:
+                        rating = float(rating_val) * 10 / 2
+                        rating = min(5, max(3, rating))
+                    except (ValueError, TypeError):
+                        rating = 4.0
+                else:
+                    rating = 4.0
+                
                 foods.append({
                     'name': poi['name'],
                     'location': poi.get('address', ''),
-                    'price_range': f"{int(poi.get('cost', 0) * 30)}-{int(poi.get('cost', 0) * 80)}元" if poi.get('cost') else '50-100元',
+                    'price_range': price_range,
                     'recommend': poi.get('type', '特色美食'),
-                    'type': '高德推荐',
-                    'rating': int(poi.get('rating', 0) * 10) / 2 if poi.get('rating') else 4,
+                    'type': poi.get('type', '特色餐饮'),
+                    'rating': round(rating, 1),
                     'source': 'amap',
                     'is_real': True
                 })
+        
+        hotels = []
+        if isinstance(hotels_pois, list):
+            for poi in hotels_pois[:3]:
+                if poi.get('name'):
+                    hotels.append({
+                        'name': poi['name'],
+                        'address': poi.get('address', ''),
+                        'tel': poi.get('tel', ''),
+                        'source': 'amap',
+                        'is_real': True
+                    })
         
         if attractions or foods:
             city_data = {
                 'attractions': attractions,
                 'food': foods,
-                'transport': f"{normalized_city}的公共交通便利，建议使用当地交通APP或打车",
+                'hotels': hotels,
+                'transport': f"{normalized_city}的公共交通便利，建议使用高德地图导航",
                 'tips': f"以上数据来自高德地图真实POI，共{len(attractions)}个景点和{len(foods)}个美食",
                 'is_real': True,
                 'source': 'amap'
