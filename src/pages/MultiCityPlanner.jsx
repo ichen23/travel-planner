@@ -702,6 +702,30 @@ export default function MultiCityPlanner() {
     </Card>
   )
 
+  const getTypeIcon = (type) => {
+    const icons = {
+      'attraction': '🏛️',
+      'food': '🍜',
+      'transport': '🚇',
+      'routine': '🌅',
+      'rest': '☕',
+      'entertainment': '🌆'
+    }
+    return icons[type] || '📍'
+  }
+
+  const getTypeColor = (type) => {
+    const colors = {
+      'attraction': 'blue',
+      'food': 'green',
+      'transport': 'orange',
+      'routine': 'cyan',
+      'rest': 'purple',
+      'entertainment': 'magenta'
+    }
+    return colors[type] || 'default'
+  }
+
   const renderDaySchedule = (day, dayIndex) => (
     <Card
       key={dayIndex}
@@ -718,10 +742,28 @@ export default function MultiCityPlanner() {
         </Space>
       }
     >
+      {day.hotel_recommendation && (
+        <Alert
+          message={<Space><HomeOutlined />🏨 酒店推荐：{day.hotel_recommendation}</Space>}
+          type="success"
+          showIcon={false}
+          style={{ marginBottom: 16 }}
+        />
+      )}
+      
       {day.transport_tips && (
         <Alert
-          message={<Space><CarOutlined />{day.transport_tips}</Space>}
+          message={<Space><CarOutlined />🚗 交通提示：{day.transport_tips}</Space>}
           type="info"
+          showIcon={false}
+          style={{ marginBottom: 16 }}
+        />
+      )}
+      
+      {day.morning_foods && day.morning_foods.length > 0 && (
+        <Alert
+          message={<Space><StarOutlined />🍽️ 当地美食：{day.morning_foods.join('、')}</Space>}
+          type="warning"
           showIcon={false}
           style={{ marginBottom: 16 }}
         />
@@ -730,13 +772,13 @@ export default function MultiCityPlanner() {
       <Timeline
         style={{ padding: '8px 0' }}
         items={day.schedule.map((item, idx) => ({
-          color: item.type === 'attraction' ? 'blue' : item.type === 'food' ? 'green' : 'orange',
-          dot: <span style={{ fontSize: 16 }}>{item.type === 'attraction' ? '🏛️' : item.type === 'food' ? '🍜' : '🚇'}</span>,
+          color: getTypeColor(item.type),
+          dot: <span style={{ fontSize: 16 }}>{item.icon || getTypeIcon(item.type)}</span>,
           children: (
             <div style={{ padding: '8px 0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <ClockCircleOutlined style={{ color: '#666' }} />
-                <Text strong>{item.start_time} - {item.end_time}</Text>
+                <Text strong>{item.start_time}{item.end_time ? ` - ${item.end_time}` : ''}</Text>
                 {item.duration_minutes && (
                   <Tag color="default">{item.duration_minutes}分钟</Tag>
                 )}
@@ -755,8 +797,39 @@ export default function MultiCityPlanner() {
                 {item.name}
               </div>
               
+              {item.description && (
+                <div style={{ 
+                  color: '#333', 
+                  fontSize: 14, 
+                  marginTop: 4,
+                  padding: '8px 12px',
+                  background: '#f0f5ff',
+                  borderRadius: 4
+                }}>
+                  📖 {item.description}
+                </div>
+              )}
+              
+              {item.best_visit_time && (
+                <div style={{ color: '#1890ff', fontSize: 14, marginTop: 4 }}>
+                  ⏰ 最佳游玩时间：{item.best_visit_time}
+                </div>
+              )}
+              
+              {item.visit_duration && (
+                <div style={{ color: '#52c41a', fontSize: 14, marginTop: 2 }}>
+                  🕐 建议游玩时长：{item.visit_duration}
+                </div>
+              )}
+              
+              {item.open_hours && (
+                <div style={{ color: '#722ed1', fontSize: 14, marginTop: 2 }}>
+                  📅 开放时间：{item.open_hours}
+                </div>
+              )}
+              
               {item.location && (
-                <div style={{ color: '#666', fontSize: 14 }}>
+                <div style={{ color: '#666', fontSize: 14, marginTop: 4 }}>
                   📍 {item.location}
                 </div>
               )}
@@ -779,10 +852,11 @@ export default function MultiCityPlanner() {
                 <div style={{ 
                   marginTop: 8, 
                   padding: '8px 12px', 
-                  background: '#f6ffed', 
+                  background: '#fffbe6', 
                   borderRadius: 4,
                   fontSize: 13,
-                  color: '#389e0d'
+                  color: '#d48806',
+                  borderLeft: '3px solid #faad14'
                 }}>
                   💡 {item.tips}
                 </div>
@@ -791,6 +865,19 @@ export default function MultiCityPlanner() {
           )
         }))}
       />
+      
+      {day.city_tips && (
+        <div style={{ 
+          marginTop: 16, 
+          padding: '12px 16px', 
+          background: '#e6f7ff', 
+          borderRadius: 8,
+          border: '1px solid #91d5ff'
+        }}>
+          <InfoCircleOutlined style={{ color: '#1890ff', marginRight: 8 }} />
+          <strong>{day.city}旅游小贴士：</strong> {day.city_tips}
+        </div>
+      )}
     </Card>
   )
 

@@ -7,6 +7,11 @@ from app.services.city_database import (
     get_city_info, BEIJING_3HR_COORDS, ALL_CITY_COORDS,
     MASS_CITY_INFO, MEGA_CITY_INFO, EXTENDED_CITY_BASIC_INFO
 )
+from app.services.complete_city_data import ALL_CITIES_BASIC, POPULAR_CITIES
+from app.services.enhanced_schedule import (
+    generate_smart_schedule, get_hotel_recommendation, 
+    get_city_transport_tips, get_city_food, enrich_attraction_info
+)
 
 _amap_cache = {}
 
@@ -109,6 +114,8 @@ def normalize_city_name(city: str) -> str:
             normalized = normalized[:-len(suffix)]
             break
     
+    if normalized in ALL_CITIES_BASIC:
+        return normalized
     if normalized in CITY_STATIC_DATA:
         return normalized
     if normalized in CITY_BASIC_INFO:
@@ -625,7 +632,6 @@ def format_time(hour: int, minute: int = 0) -> str:
 def get_city_attractions(city: str) -> list:
     city = normalize_city_name(city)
     
-    # 优先使用真实数据
     try:
         from app.services.real_city_data import REAL_CITY_ATTRACTIONS
         if city in REAL_CITY_ATTRACTIONS:
@@ -637,7 +643,9 @@ def get_city_attractions(city: str) -> list:
         return CITY_STATIC_DATA[city]["attractions"]
     
     city_info = {}
-    if city in CITY_BASIC_INFO:
+    if city in ALL_CITIES_BASIC:
+        city_info = ALL_CITIES_BASIC[city]
+    elif city in CITY_BASIC_INFO:
         city_info = CITY_BASIC_INFO[city]
     elif city in MASS_CITY_INFO:
         city_info = MASS_CITY_INFO[city]
@@ -665,17 +673,21 @@ def get_city_attractions(city: str) -> list:
         attractions_list = []
     
     if not attractions_list:
-        attractions_list = [f"{city}市中心游览", f"{city}博物馆/纪念馆", f"{city}特色街区"]
+        attractions_list = [f"{city}市中心游览", f"{city}博物馆/纪念馆", f"{city}特色街区",
+                           f"{city}公园", f"{city}古迹", f"{city}自然景观",
+                           f"{city}美食街", f"{city}购物区"]
+    
+    max_attractions = 15 if city in POPULAR_CITIES else 10
     
     attractions = []
-    for i, attr_name in enumerate(attractions_list[:8]):
+    for i, attr_name in enumerate(attractions_list[:max_attractions]):
         periods = ["morning", "afternoon", "evening"]
         base_hour = 8 + (i % 4) * 2 + (i // 4) * 2
         duration = 2.5 if i < 4 else 2
         
         attraction = {
             "name": attr_name,
-            "start_time": format_time(base_hour, 0),
+            "start_time": f"{base_hour:02d}:00",
             "duration_hours": duration,
             "best_period": periods[i % 3],
             "ticket": f"{random.choice([0, 30, 50, 80, 100])}元",
@@ -685,13 +697,33 @@ def get_city_attractions(city: str) -> list:
         }
         attractions.append(attraction)
     
+    if len(attractions) < 8 and city not in POPULAR_CITIES:
+        additional = [f"{city}老街", f"{city}文化广场", f"{city}科技馆", 
+                     f"{city}艺术馆", f"{city}主题乐园", f"{city}动物园"]
+        for add_name in additional:
+            if len(attractions) >= 8:
+                break
+            if add_name not in attractions_list:
+                idx = len(attractions)
+                base_hour = 8 + (idx % 4) * 2
+                attraction = {
+                    "name": add_name,
+                    "start_time": f"{base_hour:02d}:00",
+                    "duration_hours": 2,
+                    "best_period": ["morning", "afternoon", "evening"][idx % 3],
+                    "ticket": f"{random.choice([0, 20, 40, 60])}元",
+                    "rating": random.randint(3, 4),
+                    "tags": ["推荐"],
+                    "tips": f"{add_name}是{city}的休闲好去处"
+                }
+                attractions.append(attraction)
+    
     return attractions
 
 
 def get_city_food(city: str) -> list:
     city = normalize_city_name(city)
     
-    # 优先使用真实数据
     try:
         from app.services.real_city_data import REAL_CITY_ATTRACTIONS
         if city in REAL_CITY_ATTRACTIONS:
@@ -702,23 +734,39 @@ def get_city_food(city: str) -> list:
     if city in CITY_STATIC_DATA:
         return CITY_STATIC_DATA[city]["food"]
     
-    return [
-        {"name": f"{city}特色美食", "location": "市中心", "price_range": "30-60元", "recommend": "当地特色菜", "type": "正餐"},
-        {"name": f"{city}小吃街", "location": "老城区", "price_range": "20-40元", "recommend": "各种特色小吃", "type": "小吃"},
-        {"name": f"{city}老字号", "location": "商业街", "price_range": "40-80元", "recommend": "传统名菜", "type": "特色"}
-    ]
+    local_foods = get_city_food_local(city)
+    
+    foods = []
+    for i, food_name in enumerate(local_foods[:5]):
+        food = {
+            "name": f"{city}{food_name}",
+            "location": f"{city}市中心",
+            "price_range": f"{random.choice([20, 30, 50, 80])}-{random.choice([50, 80, 120, 200])}元",
+            "recommend": food_name,
+            "type": "特色",
+            "rating": random.randint(3, 5)
+        }
+        foods.append(food)
+    
+    return foods
+
+
+def get_city_food_local(city: str) -> list:
+    from app.services.enhanced_schedule import LOCAL_FOOD
+    city = normalize_city_name(city)
+    if city in LOCAL_FOOD:
+        return LOCAL_FOOD[city]
+    return [f"{city}特色小吃", f"{city}传统菜肴", f"{city}老字号餐厅"]
 
 
 def get_city_info_data(city: str) -> dict:
     city = normalize_city_name(city)
     
-    # 优先使用高德缓存的真实数据
     cache_key = f"real_data_{city}"
     if cache_key in _amap_cache:
         print(f"  使用高德缓存数据: {city}")
         return _amap_cache[cache_key]
     
-    # 使用预置的真实数据
     try:
         from app.services.real_city_data import REAL_CITY_ATTRACTIONS
         if city in REAL_CITY_ATTRACTIONS:
@@ -730,6 +778,16 @@ def get_city_info_data(city: str) -> dict:
     if city in CITY_STATIC_DATA:
         print(f"  使用静态数据: {city}")
         return CITY_STATIC_DATA[city]
+    
+    if city in ALL_CITIES_BASIC:
+        print(f"  使用全国城市数据: {city}")
+        city_info = ALL_CITIES_BASIC[city]
+        return {
+            "attractions": get_city_attractions(city),
+            "food": get_city_food_local(city),
+            "transport": get_city_transport_tips(city),
+            "tips": city_info.get('highlights', f'{city}是{city_info.get("province", "")}的一个城市')
+        }
     
     city_info = {}
     if city in CITY_BASIC_INFO:
@@ -752,9 +810,9 @@ def get_city_info_data(city: str) -> dict:
     
     return {
         "attractions": get_city_attractions(city),
-        "food": get_city_food(city),
-        "transport": city_info.get('transport', '建议使用当地公共交通或打车服务'),
-        "tips": city_info.get('description', f'{city}是一个值得探索的城市')[:100]
+        "food": get_city_food_local(city),
+        "transport": city_info.get('transport', get_city_transport_tips(city)),
+        "tips": city_info.get('highlights', f'{city}是一个值得探索的城市')[:100]
     }
 
 
@@ -927,7 +985,31 @@ def generate_full_day_plan(city: str, day_index: int, user_selected_attractions:
     
     schedule = []
     
-    morning_start = 8 * 60
+    schedule.append({
+        "type": "routine",
+        "name": "起床洗漱",
+        "start_time": "07:30",
+        "end_time": "08:00",
+        "duration_minutes": 30,
+        "location": f"{city}酒店",
+        "icon": "🌅",
+        "tips": "早睡早起，精神饱满开启一天"
+    })
+    
+    breakfast_foods = get_city_food_local(city)
+    schedule.append({
+        "type": "food",
+        "name": f"早餐：享用当地特色",
+        "start_time": "08:00",
+        "end_time": "08:30",
+        "duration_minutes": 30,
+        "location": f"{city}酒店或附近早餐店",
+        "recommend": f"推荐：{', '.join(breakfast_foods[:2])}",
+        "icon": "🍳",
+        "tips": "吃好早餐，补充能量"
+    })
+    
+    morning_start = 8 * 60 + 30
     morning_end = 12 * 60
     current_time = morning_start
     
@@ -939,16 +1021,22 @@ def generate_full_day_plan(city: str, day_index: int, user_selected_attractions:
         if attr_start >= morning_end:
             break
         
+        attr_details = enrich_attraction_info(attr.get("name", ""))
+        
         schedule.append({
             "type": "attraction",
             "name": attr["name"],
             "start_time": minutes_to_time(attr_start),
             "end_time": minutes_to_time(attr_end),
             "duration_minutes": attr_end - attr_start,
-            "ticket": attr.get("ticket", "以实际为准"),
+            "ticket": attr.get("ticket", attr_details.get("ticket", "以实际为准")),
             "rating": attr.get("rating", 4),
             "tags": attr.get("tags", []),
-            "tips": attr.get("tips", ""),
+            "tips": attr_details.get("tips", attr.get("tips", "")),
+            "description": attr_details.get("description", ""),
+            "best_visit_time": attr_details.get("best_time", attr.get("best_period", "")),
+            "visit_duration": attr_details.get("visit_duration", ""),
+            "open_hours": attr_details.get("open_hours", ""),
             "icon": "🏛️"
         })
         
@@ -962,13 +1050,25 @@ def generate_full_day_plan(city: str, day_index: int, user_selected_attractions:
             "start_time": minutes_to_time(morning_end),
             "end_time": minutes_to_time(morning_end + 90),
             "duration_minutes": 90,
-            "location": lunch.get("location", ""),
-            "price_range": lunch.get("price_range", ""),
-            "recommend": lunch.get("recommend", ""),
-            "icon": "🍜"
+            "location": lunch.get("location", f"{city}市中心餐厅"),
+            "price_range": lunch.get("price_range", "50-100元"),
+            "recommend": lunch.get("recommend", f"推荐：{', '.join(breakfast_foods[:3])}"),
+            "icon": "🍜",
+            "tips": "吃好午餐，休息一下"
         })
     
-    afternoon_start = morning_end + 90
+    schedule.append({
+        "type": "rest",
+        "name": "午休",
+        "start_time": minutes_to_time(morning_end + 90),
+        "end_time": minutes_to_time(morning_end + 120),
+        "duration_minutes": 30,
+        "location": f"{city}酒店或咖啡馆",
+        "icon": "☕",
+        "tips": "稍作休息，恢复体力"
+    })
+    
+    afternoon_start = morning_end + 120
     afternoon_end = 18 * 60
     current_time = afternoon_start
     
@@ -980,16 +1080,22 @@ def generate_full_day_plan(city: str, day_index: int, user_selected_attractions:
         if attr_start >= afternoon_end:
             break
         
+        attr_details = enrich_attraction_info(attr.get("name", ""))
+        
         schedule.append({
             "type": "attraction",
             "name": attr["name"],
             "start_time": minutes_to_time(attr_start),
             "end_time": minutes_to_time(attr_end),
             "duration_minutes": attr_end - attr_start,
-            "ticket": attr.get("ticket", "以实际为准"),
+            "ticket": attr.get("ticket", attr_details.get("ticket", "以实际为准")),
             "rating": attr.get("rating", 4),
             "tags": attr.get("tags", []),
-            "tips": attr.get("tips", ""),
+            "tips": attr_details.get("tips", attr.get("tips", "")),
+            "description": attr_details.get("description", ""),
+            "best_visit_time": attr_details.get("best_time", attr.get("best_period", "")),
+            "visit_duration": attr_details.get("visit_duration", ""),
+            "open_hours": attr_details.get("open_hours", ""),
             "icon": "🏛️"
         })
         
@@ -1003,10 +1109,11 @@ def generate_full_day_plan(city: str, day_index: int, user_selected_attractions:
             "start_time": minutes_to_time(afternoon_end),
             "end_time": minutes_to_time(afternoon_end + 90),
             "duration_minutes": 90,
-            "location": dinner.get("location", ""),
-            "price_range": dinner.get("price_range", ""),
-            "recommend": dinner.get("recommend", ""),
-            "icon": "🍲"
+            "location": dinner.get("location", f"{city}特色餐厅"),
+            "price_range": dinner.get("price_range", "80-150元"),
+            "recommend": dinner.get("recommend", f"推荐：{', '.join(breakfast_foods[2:4])}"),
+            "icon": "🍲",
+            "tips": "享用当地美食，体验当地文化"
         })
     
     evening_start = afternoon_end + 90
@@ -1021,31 +1128,65 @@ def generate_full_day_plan(city: str, day_index: int, user_selected_attractions:
         if attr_start >= evening_end:
             break
         
+        attr_details = enrich_attraction_info(attr.get("name", ""))
+        
         schedule.append({
             "type": "attraction",
             "name": attr["name"],
             "start_time": minutes_to_time(attr_start),
             "end_time": minutes_to_time(attr_end),
             "duration_minutes": attr_end - attr_start,
-            "ticket": attr.get("ticket", "以实际为准"),
+            "ticket": attr.get("ticket", attr_details.get("ticket", "以实际为准")),
             "rating": attr.get("rating", 4),
             "tags": attr.get("tags", []),
-            "tips": attr.get("tips", ""),
+            "tips": attr_details.get("tips", attr.get("tips", "")),
+            "description": attr_details.get("description", ""),
+            "best_visit_time": attr_details.get("best_time", attr.get("best_period", "")),
+            "visit_duration": attr_details.get("visit_duration", ""),
+            "open_hours": attr_details.get("open_hours", ""),
             "icon": "🌃"
         })
         
         current_time = attr_end
+    
+    schedule.append({
+        "type": "entertainment",
+        "name": "自由活动/逛夜景",
+        "start_time": minutes_to_time(current_time),
+        "end_time": "22:00",
+        "duration_minutes": (22 * 60) - current_time,
+        "location": f"{city}市区",
+        "icon": "🌆",
+        "tips": "可以逛夜市、买特产、体验当地夜生活"
+    })
+    
+    schedule.append({
+        "type": "routine",
+        "name": "回酒店休息",
+        "start_time": "22:00",
+        "end_time": "22:30",
+        "duration_minutes": 30,
+        "location": f"{city}酒店",
+        "icon": "🏨",
+        "tips": "早点休息，为明天做准备"
+    })
     
     schedule.sort(key=lambda x: x["start_time"])
     
     if not schedule:
         return None
     
+    hotel_rec = get_hotel_recommendation(city)
+    transport_tips = get_city_transport_tips(city)
+    local_foods = get_city_food(city)
+    
     return {
         "day": day_index,
         "city": city,
         "date_label": f"第{day_index}天",
-        "transport_tips": city_data.get("transport", ""),
+        "morning_foods": local_foods[:3],
+        "hotel_recommendation": hotel_rec,
+        "transport_tips": transport_tips,
         "city_tips": city_data.get("tips", ""),
         "total_duration_minutes": sum(item["duration_minutes"] for item in schedule),
         "schedule": schedule
@@ -1085,9 +1226,9 @@ async def generate_multi_city_itinerary(cities: list, day_allocation: list,
                 result = None
             if result:
                 city_real_data[city] = result
-                print(f"✓ {city}: 获取到 {len(result.get('attractions', []))} 个景点, {len(result.get('food', []))} 个美食")
+                print(f"[OK] {city}: 获取到 {len(result.get('attractions', []))} 个景点, {len(result.get('food', []))} 个美食")
             else:
-                print(f"✗ {city}: 使用备用数据")
+                print(f"[SKIP] {city}: 使用备用数据")
         
         days_schedule = []
         transfer_segments = []
