@@ -989,10 +989,34 @@ def parse_duration_to_minutes(duration_str: str) -> int:
         return 120
 
 
-def generate_full_day_plan(city: str, day_index: int, user_selected_attractions: list = None) -> dict:
+def estimate_travel_time_between(current_attr: dict, next_attr: dict) -> int:
+    if not current_attr or not next_attr:
+        return 30
+    
+    current_addr = current_attr.get("address", "")
+    next_addr = next_attr.get("address", "")
+    
+    distant_keywords = ["山", "景区", "国家公园", "森林", "峡谷", "古镇", "湖", "水", "公园", "寺", "庙"]
+    
+    is_current_distant = any(kw in current_addr for kw in distant_keywords) if current_addr else False
+    is_next_distant = any(kw in next_addr for kw in distant_keywords) if next_addr else False
+    
+    if is_current_distant or is_next_distant:
+        return 45
+    
+    return 25
+
+
+def generate_full_day_plan(city: str, day_index: int, user_selected_attractions: list = None, 
+                           real_data: dict = None) -> dict:
     city_data = get_city_info_data(city)
-    all_attractions = city_data.get("attractions", [])
-    foods = city_data.get("food", [])
+    all_attractions = real_data.get("attractions", []) if real_data and real_data.get("attractions") else city_data.get("attractions", [])
+    
+    real_foods = real_data.get("food", []) if real_data and real_data.get("food") else []
+    if real_foods:
+        foods = real_foods
+    else:
+        foods = city_data.get("food", [])
     
     if not all_attractions:
         return None
@@ -1047,181 +1071,190 @@ def generate_full_day_plan(city: str, day_index: int, user_selected_attractions:
                 used_attr_names.add(attr["name"])
     
     schedule = []
+    current_time = 7 * 60 + 30
     
     schedule.append({
         "type": "routine",
         "name": "起床洗漱",
-        "start_time": "07:30",
-        "end_time": "08:00",
+        "start_time": minutes_to_time(current_time),
+        "end_time": minutes_to_time(current_time + 30),
         "duration_minutes": 30,
         "location": f"{city}酒店",
         "icon": "🌅",
         "tips": "早睡早起，精神饱满开启一天"
     })
+    current_time += 30
     
-    breakfast_foods = get_city_food_local(city)
-    schedule.append({
-        "type": "food",
-        "name": f"早餐：享用当地特色",
-        "start_time": "08:00",
-        "end_time": "08:30",
-        "duration_minutes": 30,
-        "location": f"{city}酒店或附近早餐店",
-        "recommend": f"推荐：{', '.join(breakfast_foods[:2])}",
-        "icon": "🍳",
-        "tips": "吃好早餐，补充能量"
-    })
+    breakfast_choice = None
+    if foods:
+        breakfast_choice = foods[0]
     
-    morning_start = 8 * 60 + 30
-    morning_end = 12 * 60
-    current_time = morning_start
+    if breakfast_choice:
+        schedule.append({
+            "type": "food",
+            "name": f"早餐：{breakfast_choice['name']}",
+            "start_time": minutes_to_time(current_time),
+            "end_time": minutes_to_time(current_time + 30),
+            "duration_minutes": 30,
+            "location": breakfast_choice.get("address", f"{city}附近餐厅"),
+            "price_range": f"人均{breakfast_choice.get('cost', 15):.0f}元",
+            "rating": breakfast_choice.get("rating", 0),
+            "icon": "🍳",
+            "tips": "吃好早餐，补充能量"
+        })
+    else:
+        local_foods = get_city_food_local(city)
+        schedule.append({
+            "type": "food",
+            "name": f"早餐：{', '.join(local_foods[:2])}",
+            "start_time": minutes_to_time(current_time),
+            "end_time": minutes_to_time(current_time + 30),
+            "duration_minutes": 30,
+            "location": f"{city}附近餐厅",
+            "icon": "🍳",
+            "tips": "吃好早餐，补充能量"
+        })
+    current_time += 30
     
-    for attr in morning_attrs[:2]:
-        attr_start = max(current_time, time_to_minutes(attr.get("start_time", "09:00")))
-        attr_duration = parse_duration_to_minutes(attr.get("duration_hours", 2))
-        attr_end = min(attr_start + attr_duration, morning_end)
+    all_day_attrs = morning_attrs + afternoon_attrs + evening_attrs
+    last_attr = None
+    
+    for attr in all_day_attrs[:4]:
+        if last_attr:
+            travel_min = estimate_travel_time_between(last_attr, attr)
+            schedule.append({
+                "type": "transport",
+                "name": f"前往{attr['name']}",
+                "start_time": minutes_to_time(current_time),
+                "end_time": minutes_to_time(current_time + travel_min),
+                "duration_minutes": travel_min,
+                "from": last_attr.get("name", ""),
+                "to": attr.get("name", ""),
+                "icon": "🚗",
+                "tips": f"约{travel_min}分钟"
+            })
+            current_time += travel_min
         
-        if attr_start >= morning_end:
-            break
+        attr_open = attr.get("open_time", "")
+        attr_start = current_time
+        
+        if attr_open:
+            try:
+                oh, om = map(int, attr_open.split(":")[:2])
+                open_min = oh * 60 + om
+                attr_start = max(current_time, open_min)
+            except:
+                pass
+        
+        addr = attr.get("address", "")
+        distant_words = ["山", "景区", "国家公园", "森林", "峡谷"]
+        is_distant = any(w in addr for w in distant_words) if addr else False
+        
+        attr_duration = 4 * 60 if is_distant else 2 * 60
+        attr_end = attr_start + attr_duration
         
         attr_details = enrich_attraction_info(attr.get("name", ""))
         
         schedule.append({
             "type": "attraction",
-            "name": attr["name"],
+            "name": attr.get("name", ""),
             "start_time": minutes_to_time(attr_start),
             "end_time": minutes_to_time(attr_end),
-            "duration_minutes": attr_end - attr_start,
-            "ticket": attr.get("ticket", attr_details.get("ticket", "以实际为准")),
-            "rating": attr.get("rating", 4),
-            "tags": attr.get("tags", []),
+            "duration_minutes": attr_duration,
+            "address": addr,
+            "ticket": attr_details.get("ticket", "以实际为准"),
+            "rating": attr.get("rating", attr_details.get("rating", 4)),
+            "type_name": attr.get("type", ""),
             "tips": attr_details.get("tips", attr.get("tips", "")),
             "description": attr_details.get("description", ""),
-            "best_visit_time": attr_details.get("best_time", attr.get("best_period", "")),
-            "visit_duration": attr_details.get("visit_duration", ""),
-            "open_hours": attr_details.get("open_hours", ""),
-            "icon": "🏛️"
+            "best_visit_time": attr_details.get("best_time", ""),
+            "visit_duration": attr_details.get("visit_duration", f"{attr_duration // 60}小时"),
+            "open_hours": attr_details.get("open_hours", attr_open or "请查询官网"),
+            "transport_to": "建议自驾或包车前往" if is_distant else "可乘坐公交或打车",
+            "icon": "🏔️" if is_distant else "🏛️"
         })
         
-        current_time = attr_end + 15
+        last_attr = attr
+        current_time = attr_end
+        
+        if 11 * 60 <= current_time <= 14 * 60 and foods:
+            lunch = foods[len(foods) // 3] if len(foods) > 3 else foods[1] if len(foods) > 1 else foods[0]
+            schedule.append({
+                "type": "food",
+                "name": f"午餐：{lunch['name']}",
+                "start_time": minutes_to_time(current_time),
+                "end_time": minutes_to_time(current_time + 90),
+                "duration_minutes": 90,
+                "location": lunch.get("address", f"{city}餐厅"),
+                "price_range": f"人均{lunch.get('cost', 60):.0f}元",
+                "rating": lunch.get("rating", 0),
+                "icon": "🍜",
+                "tips": "享用当地特色美食"
+            })
+            current_time += 90
+        
+        elif 17 * 60 <= current_time <= 20 * 60 and foods:
+            dinner = foods[-1] if len(foods) > 1 else foods[0]
+            schedule.append({
+                "type": "food",
+                "name": f"晚餐：{dinner['name']}",
+                "start_time": minutes_to_time(current_time),
+                "end_time": minutes_to_time(current_time + 90),
+                "duration_minutes": 90,
+                "location": dinner.get("address", f"{city}餐厅"),
+                "price_range": f"人均{dinner.get('cost', 80):.0f}元",
+                "rating": dinner.get("rating", 0),
+                "icon": "🍲",
+                "tips": "享用当地特色晚餐"
+            })
+            current_time += 90
     
-    if foods:
-        lunch = foods[0]
+    has_lunch = any("午餐" in s.get("name", "") for s in schedule)
+    has_dinner = any("晚餐" in s.get("name", "") for s in schedule)
+    
+    if not has_lunch and foods and 11 * 60 <= current_time <= 14 * 60 + 60:
+        lunch = foods[1] if len(foods) > 1 else foods[0]
         schedule.append({
             "type": "food",
             "name": f"午餐：{lunch['name']}",
-            "start_time": minutes_to_time(morning_end),
-            "end_time": minutes_to_time(morning_end + 90),
+            "start_time": minutes_to_time(current_time),
+            "end_time": minutes_to_time(current_time + 90),
             "duration_minutes": 90,
-            "location": lunch.get("location", f"{city}市中心餐厅"),
-            "price_range": lunch.get("price_range", "50-100元"),
-            "recommend": lunch.get("recommend", f"推荐：{', '.join(breakfast_foods[:3])}"),
+            "location": lunch.get("address", f"{city}餐厅"),
+            "price_range": f"人均{lunch.get('cost', 60):.0f}元",
+            "rating": lunch.get("rating", 0),
             "icon": "🍜",
-            "tips": "吃好午餐，休息一下"
+            "tips": "享用当地特色美食"
         })
+        current_time += 90
     
-    schedule.append({
-        "type": "rest",
-        "name": "午休",
-        "start_time": minutes_to_time(morning_end + 90),
-        "end_time": minutes_to_time(morning_end + 120),
-        "duration_minutes": 30,
-        "location": f"{city}酒店或咖啡馆",
-        "icon": "☕",
-        "tips": "稍作休息，恢复体力"
-    })
-    
-    afternoon_start = morning_end + 120
-    afternoon_end = 18 * 60
-    current_time = afternoon_start
-    
-    for attr in afternoon_attrs[:2]:
-        attr_start = max(current_time, time_to_minutes(attr.get("start_time", "14:00")))
-        attr_duration = parse_duration_to_minutes(attr.get("duration_hours", 2))
-        attr_end = min(attr_start + attr_duration, afternoon_end)
-        
-        if attr_start >= afternoon_end:
-            break
-        
-        attr_details = enrich_attraction_info(attr.get("name", ""))
-        
-        schedule.append({
-            "type": "attraction",
-            "name": attr["name"],
-            "start_time": minutes_to_time(attr_start),
-            "end_time": minutes_to_time(attr_end),
-            "duration_minutes": attr_end - attr_start,
-            "ticket": attr.get("ticket", attr_details.get("ticket", "以实际为准")),
-            "rating": attr.get("rating", 4),
-            "tags": attr.get("tags", []),
-            "tips": attr_details.get("tips", attr.get("tips", "")),
-            "description": attr_details.get("description", ""),
-            "best_visit_time": attr_details.get("best_time", attr.get("best_period", "")),
-            "visit_duration": attr_details.get("visit_duration", ""),
-            "open_hours": attr_details.get("open_hours", ""),
-            "icon": "🏛️"
-        })
-        
-        current_time = attr_end + 15
-    
-    if foods:
+    if not has_dinner and foods and current_time >= 17 * 60:
         dinner = foods[-1] if len(foods) > 1 else foods[0]
         schedule.append({
             "type": "food",
             "name": f"晚餐：{dinner['name']}",
-            "start_time": minutes_to_time(afternoon_end),
-            "end_time": minutes_to_time(afternoon_end + 90),
+            "start_time": minutes_to_time(current_time),
+            "end_time": minutes_to_time(current_time + 90),
             "duration_minutes": 90,
-            "location": dinner.get("location", f"{city}特色餐厅"),
-            "price_range": dinner.get("price_range", "80-150元"),
-            "recommend": dinner.get("recommend", f"推荐：{', '.join(breakfast_foods[2:4])}"),
+            "location": dinner.get("address", f"{city}餐厅"),
+            "price_range": f"人均{dinner.get('cost', 80):.0f}元",
+            "rating": dinner.get("rating", 0),
             "icon": "🍲",
-            "tips": "享用当地美食，体验当地文化"
+            "tips": "享用当地特色晚餐"
         })
+        current_time += 90
     
-    evening_start = afternoon_end + 90
-    evening_end = 21 * 60
-    current_time = evening_start
-    
-    for attr in evening_attrs[:1]:
-        attr_start = max(current_time, time_to_minutes(attr.get("start_time", "19:30")))
-        attr_duration = parse_duration_to_minutes(attr.get("duration_hours", 1.5))
-        attr_end = min(attr_start + attr_duration, evening_end)
-        
-        if attr_start >= evening_end:
-            break
-        
-        attr_details = enrich_attraction_info(attr.get("name", ""))
-        
+    if current_time < 21 * 60:
         schedule.append({
-            "type": "attraction",
-            "name": attr["name"],
-            "start_time": minutes_to_time(attr_start),
-            "end_time": minutes_to_time(attr_end),
-            "duration_minutes": attr_end - attr_start,
-            "ticket": attr.get("ticket", attr_details.get("ticket", "以实际为准")),
-            "rating": attr.get("rating", 4),
-            "tags": attr.get("tags", []),
-            "tips": attr_details.get("tips", attr.get("tips", "")),
-            "description": attr_details.get("description", ""),
-            "best_visit_time": attr_details.get("best_time", attr.get("best_period", "")),
-            "visit_duration": attr_details.get("visit_duration", ""),
-            "open_hours": attr_details.get("open_hours", ""),
-            "icon": "🌃"
+            "type": "entertainment",
+            "name": "自由活动",
+            "start_time": minutes_to_time(current_time),
+            "end_time": "22:00",
+            "duration_minutes": max((22 * 60) - current_time, 30),
+            "location": f"{city}市区",
+            "icon": "🌆",
+            "tips": "可逛夜市、购买特产"
         })
-        
-        current_time = attr_end
-    
-    schedule.append({
-        "type": "entertainment",
-        "name": "自由活动/逛夜景",
-        "start_time": minutes_to_time(current_time),
-        "end_time": "22:00",
-        "duration_minutes": (22 * 60) - current_time,
-        "location": f"{city}市区",
-        "icon": "🌆",
-        "tips": "可以逛夜市、买特产、体验当地夜生活"
-    })
     
     schedule.append({
         "type": "routine",
@@ -1239,20 +1272,13 @@ def generate_full_day_plan(city: str, day_index: int, user_selected_attractions:
     if not schedule:
         return None
     
-    hotel_rec = get_hotel_recommendation(city)
-    transport_tips = get_city_transport_tips(city)
-    local_foods = get_city_food(city)
+    total_items = len([s for s in schedule if s["type"] == "attraction"])
     
     return {
         "day": day_index,
         "city": city,
-        "date_label": f"第{day_index}天",
-        "morning_foods": local_foods[:3],
-        "hotel_recommendation": hotel_rec,
-        "transport_tips": transport_tips,
-        "city_tips": city_data.get("tips", ""),
-        "total_duration_minutes": sum(item["duration_minutes"] for item in schedule),
-        "schedule": schedule
+        "schedule": schedule,
+        "attraction_count": total_items
     }
 
 
@@ -1304,25 +1330,38 @@ async def generate_multi_city_itinerary(cities: list, day_allocation: list,
             
             user_selected = user_attractions.get(city, [])
             
-            # 优先使用真实数据
             real_data = city_real_data.get(city)
             if real_data and real_data.get('attractions'):
                 city_attractions = real_data['attractions']
-                print(f"  → {city}: 使用真实POI数据 ({len(city_attractions)} 个景点)")
+                print(f"  -> {city}: 使用真实POI数据 ({len(city_attractions)} 个景点)")
             else:
                 city_attractions = get_city_attractions(city)
             
             city_budget = estimate_city_budget(city, city_days, budget_per_day, city_attractions)
             city_budgets[city] = city_budget
             
+            total_attrs_for_city = len(city_attractions)
+            max_daily_attrs = 4
+            if total_attrs_for_city > city_days * max_daily_attrs:
+                print(f"[WARNING] {city}有{total_attrs_for_city}个景点，建议增加天数到{(total_attrs_for_city + max_daily_attrs - 1) // max_daily_attrs}天")
+            
             for d in range(city_days):
                 day_user_selected = user_selected if d == 0 else []
                 
-                day_plan = generate_full_day_plan(city, day_counter, day_user_selected)
+                day_plan = generate_full_day_plan(city, day_counter, day_user_selected, real_data)
                 if day_plan:
                     days_schedule.append(day_plan)
                     day_counter += 1
                     last_day_index_by_city[city] = len(days_schedule) - 1
+        
+        warnings = []
+        for i, city in enumerate(cities):
+            real_data = city_real_data.get(city)
+            city_days = day_allocation[i]
+            if real_data and real_data.get('attractions'):
+                attr_count = len(real_data['attractions'])
+                if attr_count > city_days * 4:
+                    warnings.append(f"{city}有{attr_count}个景点，{city_days}天可能无法全部游览，建议增加天数")
         
         for i in range(len(cities) - 1):
             from_city = cities[i]
@@ -1330,27 +1369,57 @@ async def generate_multi_city_itinerary(cities: list, day_allocation: list,
             
             train_info = get_train_info(from_city, to_city)
             
+            last_day_idx = last_day_index_by_city.get(from_city)
+            last_day_end_time = "19:00"
+            
+            if last_day_idx is not None and last_day_idx < len(days_schedule):
+                last_day_schedule = days_schedule[last_day_idx].get('schedule', [])
+                for item in reversed(last_day_schedule):
+                    if item.get('type') == 'attraction':
+                        last_day_end_time = item.get('end_time', '19:00')
+                        break
+            
+            dep_hour, dep_minute = map(int, last_day_end_time.split(':'))
+            new_dep_minutes = dep_hour * 60 + dep_minute + 60
+            if new_dep_minutes > 21 * 60:
+                new_dep_minutes = 21 * 60
+            if new_dep_minutes < 16 * 60:
+                new_dep_minutes = 18 * 60
+            dynamic_departure = minutes_to_time(new_dep_minutes)
+            
             transfer_segment = {
                 "from_city": from_city,
                 "to_city": to_city,
-                "train_number": train_info.get("train_number", "未知"),
+                "train_number": train_info.get("train_number", "以12306为准"),
                 "train_type": train_info.get("type", "G"),
                 "train_type_name": train_info.get("type_name", "高铁"),
-                "departure": "19:00",
-                "arrival": calculate_arrival_time("19:00", train_info.get("duration_min", 120)),
-                "duration": train_info.get("duration_text", "2小时"),
+                "departure": dynamic_departure,
+                "arrival": calculate_arrival_time(dynamic_departure, train_info.get("duration_min", 120)),
+                "duration": train_info.get("duration_text", "约2小时"),
                 "duration_minutes": train_info.get("duration_min", 120),
-                "price": train_info.get("price", 100),
+                "price": train_info.get("price", 0),
+                "note": "建议提前在12306查询并预订车票",
                 "icon": "🚄"
             }
             transfer_segments.append(transfer_segment)
             
-            last_idx = last_day_index_by_city.get(from_city)
-            if last_idx is not None and last_idx < len(days_schedule):
-                add_transfer_to_day(days_schedule[last_idx], from_city, to_city, transfer_segment)
+            if last_day_idx is not None and last_day_idx < len(days_schedule):
+                add_transfer_to_day(days_schedule[last_day_idx], from_city, to_city, transfer_segment)
         
         total_transfer_cost = sum(t.get("price", 0) for t in transfer_segments)
         total_ticket_cost = sum(b.get("ticket", 0) for b in city_budgets.values())
+        
+        all_tips = [
+            "所有景点和美食数据来自高德地图，确保真实可靠",
+            "建议在12306官网查询并预订火车票，获取准确的车次和时间",
+            "山区景区如老君山、华山等建议安排4小时以上游玩时间",
+            "不同景点间可能需要考虑交通时间，已在行程中安排",
+            "建议每天带好水、防晒用品和舒适的鞋子",
+            "关注天气预报，合理安排室内外景点"
+        ]
+        
+        if warnings:
+            all_tips = warnings + all_tips
         
         return {
             "success": True,
@@ -1368,14 +1437,8 @@ async def generate_multi_city_itinerary(cities: list, day_allocation: list,
             "city_budgets": city_budgets,
             "transfer_segments": transfer_segments,
             "days": days_schedule,
-            "tips": [
-                "提前7-14天预订高铁票可享受优惠",
-                "建议每天8:00开始行程，晚上21:00左右结束",
-                "携带舒适的鞋子，每天步行较多",
-                "准备充电宝，随时拍照记录",
-                "关注天气预报，合理安排室内外景点",
-                "每个城市推荐1-2个必去景点，不要贪多"
-            ],
+            "tips": all_tips,
+            "warnings": warnings,
             "packing_list": get_packing_suggestions(cities),
             "generated_at": datetime.now().isoformat()
         }
@@ -1399,16 +1462,32 @@ def calculate_arrival_time(departure_time: str, duration_minutes: int) -> str:
 def add_transfer_to_day(day_plan: dict, from_city: str, to_city: str, transfer_info: dict):
     schedule = day_plan["schedule"]
     
-    evening_start = 18 * 60
+    evening_start = 17 * 60
     evening_items = [item for item in schedule if time_to_minutes(item["start_time"]) >= evening_start]
     morning_items = [item for item in schedule if time_to_minutes(item["start_time"]) < evening_start]
+    
+    dep_time = transfer_info.get("departure", "18:30")
+    dep_hour, dep_minute = map(int, dep_time.split(":"))
+    go_station_time = dep_hour - 1
+    go_station_minute = dep_minute
+    if go_station_minute >= 30:
+        go_station_time = dep_hour - 1
+        go_station_minute = dep_minute - 30
+    else:
+        go_station_time = dep_hour - 1
+        go_station_minute = dep_minute + 30
+    
+    go_station_time_str = f"{go_station_time:02d}:{go_station_minute:02d}"
+    
+    dinner_start_hour = max(go_station_time - 1, 17)
+    dinner_start_str = f"{dinner_start_hour:02d}:00"
     
     new_evening = [
         {
             "type": "food",
             "name": f"在{from_city}的最后晚餐",
-            "start_time": "18:00",
-            "end_time": "19:00",
+            "start_time": dinner_start_str,
+            "end_time": go_station_time_str,
             "duration_minutes": 60,
             "tips": "提前准备好行李，吃完晚饭去车站",
             "icon": "🍜"
@@ -1416,8 +1495,8 @@ def add_transfer_to_day(day_plan: dict, from_city: str, to_city: str, transfer_i
         {
             "type": "transport",
             "name": f"前往{from_city}火车站",
-            "start_time": "19:00",
-            "end_time": "19:30",
+            "start_time": go_station_time_str,
+            "end_time": dep_time,
             "duration_minutes": 30,
             "tips": "建议打车或地铁，预留足够时间",
             "icon": "🚖"
@@ -1436,7 +1515,11 @@ def add_transfer_to_day(day_plan: dict, from_city: str, to_city: str, transfer_i
     day_plan["schedule"] = morning_items + new_evening
     day_plan["is_transfer_day"] = True
     day_plan["transfer_info"] = transfer_info
-    day_plan["date_label"] = f"{day_plan['date_label']}（离开{from_city}）"
+    
+    if "date_label" in day_plan:
+        day_plan["date_label"] = f"{day_plan['date_label']}（离开{from_city}）"
+    else:
+        day_plan["date_label"] = f"离开{from_city}前往{to_city}"
 
 
 def estimate_city_budget(city: str, days: int, budget_per_day: float, attractions: list) -> dict:

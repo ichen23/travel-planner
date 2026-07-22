@@ -201,7 +201,33 @@ async def get_poi_detail(poi_id: str):
 async def search_attractions(city: str, keyword: str = "", limit: int = 20) -> list:
     if keyword:
         return await search_poi(city, keyword, "", limit)
-    return await search_poi(city, "景点", "风景名胜", limit)
+    
+    all_attractions = []
+    seen_ids = set()
+    
+    search_types = [
+        ("风景名胜", ""),
+        ("自然", "自然风景区"),
+        ("山岳", ""),
+        ("森林公园", ""),
+        ("湖", "湖泊"),
+        ("古镇", "风景名胜"),
+        ("寺庙", ""),
+        ("博物馆", ""),
+        ("主题乐园", ""),
+    ]
+    
+    for type_name, type_code in search_types:
+        try:
+            pois = await search_poi(city, type_name, type_code, limit=10)
+            for poi in pois:
+                if poi.get('id') not in seen_ids and poi.get('rating', 0) > 0:
+                    seen_ids.add(poi.get('id'))
+                    all_attractions.append(poi)
+        except Exception:
+            continue
+    
+    return sorted(all_attractions, key=lambda x: x.get('rating', 0), reverse=True)[:limit]
 
 
 async def search_foods(city: str, keyword: str = "", limit: int = 20) -> list:
